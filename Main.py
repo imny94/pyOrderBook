@@ -1,4 +1,5 @@
 import sys, getopt, csv
+from multiprocessing import Process
 
 import Tree
 import EventList
@@ -8,6 +9,7 @@ DESCRIPTION:
 	This function will contain all the method calls required to run the UI on a separate process
 '''
 def display():
+	print "Display!"
 	pass
 
 
@@ -85,6 +87,15 @@ def orderBook(argv):
 			# Add the given events into the eventlist
 			eventList.add(EventList.Event(row[1:]))
 
+	print "Completed execution of instructions for order book!"
+
+'''
+DESCRIPTION:
+	This function will define the process that is responsible for matching transactions with one another
+'''
+def matchTransactions():
+	print "Matching Transactions!"
+	pass
 
 '''
 DESCRIPTION:
@@ -97,4 +108,15 @@ DESCRIPTION:
 	It will start the process that will scan the trees for any match up in orders
 '''
 if __name__ == '__main__':
-	orderBook(sys.argv[1:])
+	# Define the process that will display UI
+	displayProcess = Process(target = display)
+	# Define the process that will maintain order book
+	orderBookProcess = Process(target=orderBook, args=(sys.argv[1:],))
+	# Define the process that will match up orders
+	matchingProcess = Process(target=matchTransactions)
+
+	# Start the different processes
+	displayProcess.start()
+	orderBookProcess.start()
+	matchingProcess.start()
+	print "Completed running all processes"
