@@ -42,22 +42,22 @@ def orderBook(argv):
 
 	# Read in input from the command line
 	try:
-		opts, args = getopt.getopt(argv, "hi:os", ["help", "csvInput=", "csvOutput=", "saveOutput"] )
+		opts, args = getopt.getopt(argv, "hi:os", ["help", "input=", "output=", "saveOutput"] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
 		sys.exit(2)
-	csvInput = None
-	csvOutput = None
+	inputFile = None
+	outputFile = None
 	saveOutput = False
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
 			usage()
 			sys.exit()
-		elif opt in ("-i", "--csvInput"):
+		elif opt in ("-i", "--input"):
 			csvInput = arg
-		elif opt in ("-o", "--csvOutput"):
-			csvOutput = arg
+		elif opt in ("-o", "--output"):
+			outputFile = arg
 		elif opt in ("-s", "--saveOutput"):
 			saveOutput = True
 		else:
@@ -68,7 +68,7 @@ def orderBook(argv):
 		assert False, "No input file for commands given!"
 
 	if saveOutput:
-		if csvOutput == None:
+		if outputFile == None:
 			assert False, "No output file specified!"
 
 	# Read in the csv file
@@ -76,16 +76,16 @@ def orderBook(argv):
 		reader = csv.reader(csvfile)
 		# Row should be in format [Ask/Bid>,<Event Details>]
 		for row in reader:
+			# Add the given events into the eventlist
+			detailsForNode = eventList.add(EventList.Event(row[1:]))
+
 			AorB = row[0]
 			if AorB == "Ask":
-				askTree.add(Tree.Node(row[1:]))
+				askTree.add(detailsForNode)
 			elif AorB == "Bid":
-				bidTree.add(Tree.Node(row[1:]))
+				bidTree.add(detailsForNode)
 			else:
 				assert False, "Invalid command: %s given!"%row
-
-			# Add the given events into the eventlist
-			eventList.add(EventList.Event(row[1:]))
 
 	print "Completed execution of instructions for order book!"
 
@@ -96,6 +96,13 @@ DESCRIPTION:
 def matchTransactions():
 	print "Matching Transactions!"
 	pass
+
+'''
+DESCRIPTION:
+	This function will print out a message detailing the use of this program
+'''
+def usage():
+	print "****************USAGE*****************\nArguments are passed to this program via a flag and argument, and settings are set by toggling the flags available.\n\nThis program supports the following flags:\n	-h/--help\n 	-i/--input\n	-o/--output"
 
 '''
 DESCRIPTION:
