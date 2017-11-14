@@ -90,15 +90,17 @@ def orderBook(argv, askTree, bidTree, eventList):
 	print "Completed execution of instructions for order book!"
 
 	# For testing only!
-	# print "TESTING"
-	# node = Tree.Node(["hi","nicholas","testing"])
-	# print node
-	# askTree.add(node)
-	# bidTree.add(node)
-	# print "Finished adding"
-	# time.sleep(2)
-	# askTree.remove(node)
-	# bidTree.remove(node)
+	print "TESTING"
+	details = [1,1,"hi","nicholas","testing"]
+	details2 = [2,1,"hi","nicholas","testing"]
+	print details
+	askTree.add(details)
+	askTree.add(details2)
+	bidTree.add(details)
+	print "Finished adding"
+	time.sleep(2)
+	askTree.remove(1)
+	bidTree.remove(1)
 
 
 '''
