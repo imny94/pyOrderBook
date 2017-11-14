@@ -39,9 +39,25 @@ class Tree():
 			self.price_tree.insert(price, newNode)
 			# Add price into price_map which points directly to respective Node
 			self.price_map[price] = newNode
-			return
-		# Node exists! Update current node with new order
-		self.update(node,details)
+		else:
+			# Node exists! Update current node with new order
+			self.update(node,details)
+
+		self.updateMaxAndMinPrices(price)
+
+	'''
+	DESCRIPTION:
+		Updates the min and max prices recorded on the tree based on the given price
+		Update the weighted average price on the market
+
+	ARGUMENTS:
+		price - used to compare with current max and min price and update their values
+	'''
+	def updateMaxAndMinPrices(self, price):
+		if self.max_price == None or self.max_price < price:
+			self.max_price = price
+		if self.min_price == None or self.min_price > price:
+			self.min_price = price
 
 	'''
 	DESCRIPTION:
