@@ -30,16 +30,19 @@ class Tree():
 				This will contain the relevant details that is to be stored in the node
 	'''
 	def add(self, details):
+		print "Adding!"
 		key = details[0]
 		price = details[1]
 		node = self.lookup(details[1])
-		if not node:
+		if node == None:
+			print "New node!"
 			# Add node to tree
 			newNode = Node(price, key)
 			self.price_tree.insert(price, newNode)
 			# Add price into price_map which points directly to respective Node
 			self.price_map[price] = newNode
 		else:
+			print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
 			node.addKey(key)
 
@@ -75,7 +78,7 @@ class Tree():
 	def lookup(self, price):
 		if price in self.price_map:
 			return self.price_tree[price]
-		return False
+		return None
 
 	'''
 	DESCRIPTION:
