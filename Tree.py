@@ -33,18 +33,20 @@ class Tree():
 		print "Adding!"
 		key = details[0]
 		price = details[1]
+		numShares = details[2]
+		self.volume += numShares
 		node = self.lookup(details[1])
 		if node == None:
 			print "New node!"
 			# Add node to tree
 			newNode = Node(price, key)
-			self.price_tree.insert(price, newNode)
+			self.price_tree.insert(price, newNode, numShares)
 			# Add price into price_map which points directly to respective Node
 			self.price_map[price] = newNode
 		else:
 			print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
-			node.addKey(key)
+			node.addKey(key, numShares)
 
 		self.updateMaxAndMinPrices(price)
 
@@ -68,6 +70,7 @@ class Tree():
 	'''
 	def remove(self, price):
 		node = self.price_map.pop(price)
+		self.volume -= node.numShares
 		self.price_tree.remove(price)
 
 	'''
@@ -137,18 +140,20 @@ class Node():
 		price - The price this node represents
 		orderIndex - The index of a given event as stored in eventList
 	'''
-	def __init__(self, price, orderIndex):
+	def __init__(self, price, orderIndex, numShares):
 		# Initialize size of queue to be infinity
 		self.orderQueue = Queue.Queue(maxsize=0)
 		self.orderQueue.put(orderIndex)
 		self.price = price
+		self.numShares = numShares
 
 	'''
 	DESCRIPTION:
 		This function will serve to update the respective queue on the node with new keys that will reference the data stored in eventlist
 	'''
-	def addKey(self, key):
+	def addKey(self, key, numShares):
 		self.orderQueue.put(key)
+		self.numShares += numShares
 
 	'''
 	DESCRIPTION:
