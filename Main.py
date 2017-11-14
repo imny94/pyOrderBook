@@ -79,7 +79,7 @@ def orderBook(argv, askTree, bidTree, eventList):
 		for row in reader:
 			# Add the given events into the eventlist
 			detailsForNode = eventList.add(EventList.Event(row[1:]))
-			print detailsForNode
+			# e.g of detailsForNode = (1, 'price2', 'shares2')
 
 			AorB = row[0]
 			if AorB == "Ask":
@@ -147,6 +147,4 @@ if __name__ == '__main__':
 	orderBookProcess.start()
 	matchingProcess.start()
 
-	# orderBook(sys.argv[1:], askTree, bidTree, eventList)
-	time.sleep(5)
 	print "Completed running all processes"
