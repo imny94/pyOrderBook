@@ -1,5 +1,6 @@
-import sys, getopt, csv
+import sys, getopt, csv, time
 from multiprocessing import Process
+from multiprocessing.managers import BaseManager
 
 import Tree
 import EventList
@@ -8,8 +9,12 @@ import EventList
 DESCRIPTION:
 	This function will contain all the method calls required to run the UI on a separate process
 '''
-def display():
+def display(askTree, bidTree, eventList):
 	print "Display!"
+	while 1:
+		askTree.display()
+		bidTree.display()
+		time.sleep(1)
 	pass
 
 
@@ -33,12 +38,7 @@ ARGUMENTS:
 		+ This is a list of arguments e.g. ["-h", "-i", "smt.csv"]
 		+ argv only supports reading in an input csv file, and another output file
 '''
-def orderBook(argv):
-
-	# Initialising variables
-	askTree = Tree.Tree()
-	bidTree = Tree.Tree()
-	eventList = EventList.EventList()
+def orderBook(argv, askTree, bidTree, eventList):
 
 	# Read in input from the command line
 	try:
@@ -55,7 +55,7 @@ def orderBook(argv):
 			usage()
 			sys.exit()
 		elif opt in ("-i", "--input"):
-			csvInput = arg
+			inputFile = arg
 		elif opt in ("-o", "--output"):
 			outputFile = arg
 		elif opt in ("-s", "--saveOutput"):
@@ -64,36 +64,48 @@ def orderBook(argv):
 			print "This should not happen!"
 			assert False, "unhandled option"
 
-	if csvInput == None:
+	if inputFile == None:
 		assert False, "No input file for commands given!"
 
 	if saveOutput:
 		if outputFile == None:
 			assert False, "No output file specified!"
 
-	# Read in the csv file
-	with open(csvInput, "rb") as csvfile:
-		reader = csv.reader(csvfile)
-		# Row should be in format [Ask/Bid>,<Event Details>]
-		for row in reader:
-			# Add the given events into the eventlist
-			detailsForNode = eventList.add(EventList.Event(row[1:]))
+	# # Read in the csv file
+	# with open(inputFile, "rb") as csvfile:
+	# 	reader = csv.reader(csvfile)
+	# 	# Row should be in format [Ask/Bid>,<Event Details>]
+	# 	for row in reader:
+	# 		# Add the given events into the eventlist
+	# 		detailsForNode = eventList.add(EventList.Event(row[1:]))
 
-			AorB = row[0]
-			if AorB == "Ask":
-				askTree.add(detailsForNode)
-			elif AorB == "Bid":
-				bidTree.add(detailsForNode)
-			else:
-				assert False, "Invalid command: %s given!"%row
+	# 		AorB = row[0]
+	# 		if AorB == "Ask":
+	# 			askTree.add(detailsForNode)
+	# 		elif AorB == "Bid":
+	# 			bidTree.add(detailsForNode)
+	# 		else:
+	# 			assert False, "Invalid command: %s given!"%row
 
-	print "Completed execution of instructions for order book!"
+	# print "Completed execution of instructions for order book!"
+
+	# For testing only!
+	print "TESTING"
+	node = Tree.Node(["hi","nicholas","testing"])
+	print node
+	askTree.add(node)
+	bidTree.add(node)
+	print "Finished adding"
+	time.sleep(2)
+	askTree.remove(node)
+	bidTree.remove(node)
+
 
 '''
 DESCRIPTION:
 	This function will define the process that is responsible for matching transactions with one another
 '''
-def matchTransactions():
+def matchTransactions(askTree, bidTree, eventList):
 	print "Matching Transactions!"
 	pass
 
@@ -115,12 +127,18 @@ DESCRIPTION:
 	It will start the process that will scan the trees for any match up in orders
 '''
 if __name__ == '__main__':
+	
+	# Initialising variables
+	askTree = Tree.Tree()
+	bidTree = Tree.Tree()
+	eventList = EventList.EventList()
+
 	# Define the process that will display UI
-	displayProcess = Process(target = display)
+	displayProcess = Process(target = display, args=(askTree, bidTree, eventList, ))
 	# Define the process that will maintain order book
-	orderBookProcess = Process(target=orderBook, args=(sys.argv[1:],))
+	orderBookProcess = Process(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
 	# Define the process that will match up orders
-	matchingProcess = Process(target=matchTransactions)
+	matchingProcess = Process(target=matchTransactions, args=(askTree, bidTree, eventList))
 
 	# Start the different processes
 	displayProcess.start()
