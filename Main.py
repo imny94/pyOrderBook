@@ -1,5 +1,6 @@
 import sys, getopt, csv, time
 from multiprocessing import Process
+from threading import Thread
 from multiprocessing.managers import BaseManager
 
 import Tree
@@ -11,10 +12,10 @@ DESCRIPTION:
 '''
 def display(askTree, bidTree, eventList):
 	print "Display!"
-	while 1:
-		askTree.display()
-		bidTree.display()
-		time.sleep(1)
+	# while 1:
+	# 	askTree.display()
+	# 	bidTree.display()
+	# 	time.sleep(1)
 	pass
 
 
@@ -78,6 +79,7 @@ def orderBook(argv, askTree, bidTree, eventList):
 		for row in reader:
 			# Add the given events into the eventlist
 			detailsForNode = eventList.add(EventList.Event(row[1:]))
+			print detailsForNode
 
 			AorB = row[0]
 			if AorB == "Ask":
@@ -134,14 +136,17 @@ if __name__ == '__main__':
 	eventList = EventList.EventList()
 
 	# Define the process that will display UI
-	displayProcess = Process(target = display, args=(askTree, bidTree, eventList, ))
+	displayProcess = Thread(target = display, args=(askTree, bidTree, eventList, ))
 	# Define the process that will maintain order book
-	orderBookProcess = Process(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
+	orderBookProcess = Thread(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
 	# Define the process that will match up orders
-	matchingProcess = Process(target=matchTransactions, args=(askTree, bidTree, eventList))
+	matchingProcess = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
 
 	# Start the different processes
 	displayProcess.start()
 	orderBookProcess.start()
 	matchingProcess.start()
+
+	# orderBook(sys.argv[1:], askTree, bidTree, eventList)
+	time.sleep(5)
 	print "Completed running all processes"
