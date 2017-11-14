@@ -39,8 +39,8 @@ class Tree():
 		if node == None:
 			print "New node!"
 			# Add node to tree
-			newNode = Node(price, key)
-			self.price_tree.insert(price, newNode, numShares)
+			newNode = Node(price, key, numShares)
+			self.price_tree.insert(price, newNode)
 			# Add price into price_map which points directly to respective Node
 			self.price_map[price] = newNode
 		else:
@@ -96,7 +96,7 @@ class Tree():
 		price - The price to compare with
 	'''
 	def hasPriceGreaterThan(self, price):
-		pass
+		return [i for i in self.price_tree.key_slice(price,float("inf"))]
 
 	'''
 	DESCRIPTION:
@@ -111,7 +111,7 @@ class Tree():
 		price - The price to compare with
 	'''
 	def hasPriceSmallerThan(self, price):
-		pass
+		return [i for i in self.price_tree.key_slice(float("-inf"), price)]
 
 	'''
 	DESCRIPTION:
@@ -125,7 +125,7 @@ class Tree():
 		price - This price is used to identify the given price node to extract the order index from
 	'''
 	def getOrderIndexForPrice(self, price):
-		pass
+		return self.price_map[price].getOrderIndex()
 
 
 
@@ -157,7 +157,36 @@ class Node():
 
 	'''
 	DESCRIPTION:
+		This function will extract the oldest value on the queue and return it
+	'''
+	def getOrderIndex(self):
+		return self.orderQueue.get()
+
+	'''
+	DESCRIPTION:
 		This is used to give the number of orders in the queue for current node
 	'''
 	def NumOrders(self):
 		return self.orderQueue.qsize()
+
+
+def main():
+	t = Tree()
+	t.add([1,2,3,4,5])
+	t.add([2,3,4,5,6])
+	t.add([3,4,5,6,7])
+	t.add([1,7,3,4,5])
+	t.add([2,6,4,5,6])
+	t.add([3,5,5,6,7])
+	t.add([1,11,3,4,5])
+	t.add([2,51,4,5,6])
+	t.add([3,78,5,6,7])
+	t.add([1,46,3,4,5])
+	t.add([2,33,4,5,6])
+	t.add([3,22,5,6,7])
+	print t.hasPriceGreaterThan(10)
+	print t.hasPriceSmallerThan(100)
+	print t.getOrderIndexForPrice(22)
+
+if __name__ == '__main__':
+	main()
