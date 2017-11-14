@@ -1,2 +1,3 @@
-Ask,Blah,Blah
-Bid,Blah,Blah
+Ask,id1,time1,shares1,price1
+Bid,id2,time2,shares2,price2
+Ask,id3,time3,shares3,price3
