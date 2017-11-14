@@ -137,7 +137,7 @@ class Node():
 	def __init__(self, price, orderIndex):
 		# Initialize size of queue to be infinity
 		self.orderQueue = Queue.Queue(maxsize=0)
-		self.orderQueue.put(order)
+		self.orderQueue.put(orderIndex)
 		self.price = price
 
 	'''
