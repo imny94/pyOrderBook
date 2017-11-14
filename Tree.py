@@ -27,7 +27,7 @@ class Tree():
 
 	ARGUMENTS:
 		details - (1, 'price2', 'shares2') -> [key, event.price, event.numShares]
-				This will contain all the details that is to be stored in the node
+				This will contain the relevant details that is to be stored in the node
 	'''
 	def add(self, details):
 		key = details[0]
@@ -35,13 +35,13 @@ class Tree():
 		node = self.lookup(details[1])
 		if not node:
 			# Add node to tree
-			newNode = Node(price, details)
+			newNode = Node(price, key)
 			self.price_tree.insert(price, newNode)
 			# Add price into price_map which points directly to respective Node
 			self.price_map[price] = newNode
 		else:
-			# Node exists! Update current node with new order
-			self.update(node,details)
+			# Node exists! Add new order Index to Queue in the respective price node
+			node.addKey(key)
 
 		self.updateMaxAndMinPrices(price)
 
@@ -79,10 +79,49 @@ class Tree():
 
 	'''
 	DESCRIPTION:
-		This function will serve to update the respective node with more the respective details
+		This function will be used to scan the tree to see if there are any nodes with prices greater than given price.
+
+	Returns:
+		1) a list of prices greater than the given price if they exist
+
+		2) an Empty List otherwise
+
+	ARGUMENTS:
+		price - The price to compare with
 	'''
-	def update(self, node, details):
-		node.orderQueue.put(details)
+	def hasPriceGreaterThan(self, price):
+		pass
+
+	'''
+	DESCRIPTION:
+		This function will be used to scan the tree to see if there are any nodes with prices smaller than given price.
+
+	Returns:
+		1) a list of prices greater than the given price if they exist
+
+		2) an Empty List otherwise
+
+	ARGUMENTS:
+		price - The price to compare with
+	'''
+	def hasPriceSmallerThan(self, price):
+		pass
+
+	'''
+	DESCRIPTION:
+		This function will be used to return the oldest order index on the respective price node
+		While doing so, the queue in the price node should be updated
+
+	RETURNS:
+		The oldest order Index of the respective price node
+
+	ARGUMENTS:
+		price - This price is used to identify the given price node to extract the order index from
+	'''
+	def getOrderIndexForPrice(self, price):
+		pass
+
+
 
 class Node():
 	'''
@@ -92,14 +131,21 @@ class Node():
 			Price to represent value of Node
 
 	ARGUMENTS:
-		details - (1, 'price2', 'shares2') -> [key, event.price, event.numShares]
-				This will contain all the details that is to be stored in the node
+		price - The price this node represents
+		orderIndex - The index of a given event as stored in eventList
 	'''
-	def __init__(self, price, order):
+	def __init__(self, price, orderIndex):
 		# Initialize size of queue to be infinity
 		self.orderQueue = Queue.Queue(maxsize=0)
 		self.orderQueue.put(order)
 		self.price = price
+
+	'''
+	DESCRIPTION:
+		This function will serve to update the respective queue on the node with new keys that will reference the data stored in eventlist
+	'''
+	def addKey(self, key):
+		self.orderQueue.put(key)
 
 	'''
 	DESCRIPTION:
