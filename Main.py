@@ -10,10 +10,10 @@ DESCRIPTION:
 '''
 def display(askTree, bidTree, eventList):
 	print "Display!"
-	# while 1:
-	# 	askTree.display()
-	# 	bidTree.display()
-	# 	time.sleep(1)
+	while 1:
+		askTree.display()
+		bidTree.display()
+		time.sleep(1)
 	pass
 
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 	# Define the thread that will display UI
 	displayThread = Thread(target = display, args=(askTree, bidTree, eventList, ))
 	# Define the thread that will maintain order book
-	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, opts, inputFile, outputFile, saveOutput ))
+	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, inputFile, outputFile, saveOutput ))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
 
