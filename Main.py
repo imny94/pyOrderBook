@@ -26,42 +26,18 @@ DESCRIPTION:
 			- Bid Tree
 		- The EventList that will be used to record and store events
 
-	It will read in commands passed to it via the command line in the form of a csv file and execute the commands in order
-		The commands in the CSV file should be in the form of "<Ask/Bid>, <Event Details> " 
-		Running the commands comprises of :
-			Inserting event into EventList
-			Updating of different Trees
+	 
+	This function will:
+		Insert events into EventList
+		Update ask and bid Trees
 
 ARGUMENTS:
-	argv - command line arguments will be passed via this variable
-		+ This is a list of arguments e.g. ["-h", "-i", "smt.csv"]
-		+ argv only supports reading in an input csv file, and another output file
+	askTree - Reference to askTree
+	bidTree - Reference to bidTree
+	eventList - Reference to eventList
+	
 '''
-def orderBook(argv, askTree, bidTree, eventList):
-
-	# Read in input from the command line
-	try:
-		opts, args = getopt.getopt(argv, "hi:os", ["help", "input=", "output=", "saveOutput"] )
-	except getopt.GetoptError as e:
-		print str(e)
-		usage()
-		sys.exit(2)
-	inputFile = None
-	outputFile = None
-	saveOutput = False
-	for opt, arg in opts:
-		if opt in ("-h", "--help"):
-			usage()
-			sys.exit()
-		elif opt in ("-i", "--input"):
-			inputFile = arg
-		elif opt in ("-o", "--output"):
-			outputFile = arg
-		elif opt in ("-s", "--saveOutput"):
-			saveOutput = True
-		else:
-			print "This should not happen!"
-			assert False, "unhandled option"
+def orderBook(askTree, bidTree, eventList, inputFile, outputFile = None, saveOutput = False):
 
 	if inputFile == None:
 		assert False, "No input file for commands given!"
@@ -122,6 +98,9 @@ def usage():
 DESCRIPTION:
 	This is the main function from which the program will execute from
 
+	It will read in commands passed to it via the command line in the form of a csv file
+		The commands in the CSV file should be in the form of "<Ask/Bid>, <Event Details> " 
+
 	It will Start the thread for UI to be displayed (Display.py)
 
 	It will start the thread for the commands for the order book to be fufilled
@@ -135,10 +114,38 @@ if __name__ == '__main__':
 	bidTree = Tree.Tree()
 	eventList = EventList.EventList()
 
+	# Read in input from the command line
+	inputFile = None
+	outputFile = None
+	saveOutput = False
+
+	argv = sys.argv[1:]
+	try:
+		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
+		opts, args = getopt.getopt(argv, "hi:os", ["help", "input=", "output=", "saveOutput"] )
+	except getopt.GetoptError as e:
+		print str(e)
+		usage()
+		sys.exit(2)
+
+	for opt, arg in opts:
+		if opt in ("-h", "--help"):
+			usage()
+			sys.exit()
+		elif opt in ("-i", "--input"):
+			inputFile = arg
+		elif opt in ("-o", "--output"):
+			outputFile = arg
+		elif opt in ("-s", "--saveOutput"):
+			saveOutput = True
+		else:
+			print "This should not happen!"
+			assert False, "unhandled option"
+
 	# Define the thread that will display UI
 	displayThread = Thread(target = display, args=(askTree, bidTree, eventList, ))
 	# Define the thread that will maintain order book
-	orderBookThread = Thread(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
+	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, opts, inputFile, outputFile, saveOutput ))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
 

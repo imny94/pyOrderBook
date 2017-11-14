@@ -34,7 +34,7 @@ class Tree():
 		key = details[0]
 		price = details[1]
 		numShares = details[2]
-		self.volume += numShares
+		self.volume += int(numShares)
 		node = self.lookup(details[1])
 		if node == None:
 			print "New node!"
