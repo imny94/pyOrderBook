@@ -31,7 +31,7 @@ class EventList(object):
 			key = self.unusedKeys.get()
 
 		#add into dictionary
-		self.eventDict[key] = event;
+		self.eventDict[key] = event
 
 		#returns key, price, # shares
 		#ret_vals = [key, event.price, event.numShares]
