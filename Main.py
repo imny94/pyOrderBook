@@ -1,14 +1,12 @@
 import sys, getopt, csv, time
-from multiprocessing import Process
 from threading import Thread
-from multiprocessing.managers import BaseManager
 
 import Tree
 import EventList
 
 '''
 DESCRIPTION:
-	This function will contain all the method calls required to run the UI on a separate process
+	This function will contain all the method calls required to run the UI on a separate thread
 '''
 def display(askTree, bidTree, eventList):
 	print "Display!"
@@ -105,7 +103,7 @@ def orderBook(argv, askTree, bidTree, eventList):
 
 '''
 DESCRIPTION:
-	This function will define the process that is responsible for matching transactions with one another
+	This function will define the thread that is responsible for matching transactions with one another
 '''
 def matchTransactions(askTree, bidTree, eventList):
 	print "Matching Transactions!"
@@ -122,11 +120,11 @@ def usage():
 DESCRIPTION:
 	This is the main function from which the program will execute from
 
-	It will Start the process for UI to be displayed (Display.py)
+	It will Start the thread for UI to be displayed (Display.py)
 
-	It will start the process for the commands for the order book to be fufilled
+	It will start the thread for the commands for the order book to be fufilled
 
-	It will start the process that will scan the trees for any match up in orders
+	It will start the thread that will scan the trees for any match up in orders
 '''
 if __name__ == '__main__':
 	
@@ -142,9 +140,9 @@ if __name__ == '__main__':
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
 
-	# Start the different processes
+	# Start the different threads
 	displayThread.start()
 	orderBookThread.start()
 	matchingThread.start()
 
-	print "Completed running all processes"
+	print "Completed running all threads"
