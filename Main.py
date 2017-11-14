@@ -135,16 +135,16 @@ if __name__ == '__main__':
 	bidTree = Tree.Tree()
 	eventList = EventList.EventList()
 
-	# Define the process that will display UI
-	displayProcess = Thread(target = display, args=(askTree, bidTree, eventList, ))
-	# Define the process that will maintain order book
-	orderBookProcess = Thread(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
-	# Define the process that will match up orders
-	matchingProcess = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
+	# Define the thread that will display UI
+	displayThread = Thread(target = display, args=(askTree, bidTree, eventList, ))
+	# Define the thread that will maintain order book
+	orderBookThread = Thread(target=orderBook, args=(sys.argv[1:], askTree, bidTree, eventList, ))
+	# Define the thread that will match up orders
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
 
 	# Start the different processes
-	displayProcess.start()
-	orderBookProcess.start()
-	matchingProcess.start()
+	displayThread.start()
+	orderBookThread.start()
+	matchingThread.start()
 
 	print "Completed running all processes"
