@@ -71,34 +71,34 @@ def orderBook(argv, askTree, bidTree, eventList):
 		if outputFile == None:
 			assert False, "No output file specified!"
 
-	# # Read in the csv file
-	# with open(inputFile, "rb") as csvfile:
-	# 	reader = csv.reader(csvfile)
-	# 	# Row should be in format [Ask/Bid>,<Event Details>]
-	# 	for row in reader:
-	# 		# Add the given events into the eventlist
-	# 		detailsForNode = eventList.add(EventList.Event(row[1:]))
+	# Read in the csv file
+	with open(inputFile, "rb") as csvfile:
+		reader = csv.reader(csvfile)
+		# Row should be in format [Ask/Bid>,<Event Details>]
+		for row in reader:
+			# Add the given events into the eventlist
+			detailsForNode = eventList.add(EventList.Event(row[1:]))
 
-	# 		AorB = row[0]
-	# 		if AorB == "Ask":
-	# 			askTree.add(detailsForNode)
-	# 		elif AorB == "Bid":
-	# 			bidTree.add(detailsForNode)
-	# 		else:
-	# 			assert False, "Invalid command: %s given!"%row
+			AorB = row[0]
+			if AorB == "Ask":
+				askTree.add(detailsForNode)
+			elif AorB == "Bid":
+				bidTree.add(detailsForNode)
+			else:
+				assert False, "Invalid command: %s given!"%row
 
-	# print "Completed execution of instructions for order book!"
+	print "Completed execution of instructions for order book!"
 
 	# For testing only!
-	print "TESTING"
-	node = Tree.Node(["hi","nicholas","testing"])
-	print node
-	askTree.add(node)
-	bidTree.add(node)
-	print "Finished adding"
-	time.sleep(2)
-	askTree.remove(node)
-	bidTree.remove(node)
+	# print "TESTING"
+	# node = Tree.Node(["hi","nicholas","testing"])
+	# print node
+	# askTree.add(node)
+	# bidTree.add(node)
+	# print "Finished adding"
+	# time.sleep(2)
+	# askTree.remove(node)
+	# bidTree.remove(node)
 
 
 '''
