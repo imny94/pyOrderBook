@@ -16,7 +16,6 @@ class Tree():
 	def __init__(self):
 		self.price_tree = FastRBTree()
 		self.volume = 0
-		self.price_map = {}
 		self.min_price = None
 		self.max_price = None
 
@@ -41,8 +40,7 @@ class Tree():
 			# Add node to tree
 			newNode = Node(price, key, numShares)
 			self.price_tree.insert(price, newNode)
-			# Add price into price_map which points directly to respective Node
-			self.price_map[price] = newNode
+
 		else:
 			print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
@@ -66,12 +64,11 @@ class Tree():
 
 	'''
 	DESCRIPTION:
-		Removes the given price node from the tree and price_map
+		Removes the given price node from the tree
 	'''
 	def remove(self, price):
-		node = self.price_map.pop(price)
+		node = self.price_tree.get(price)
 		self.volume -= node.numShares
-		self.price_tree.remove(price)
 
 	'''
 	DESCRIPTION:
@@ -79,7 +76,7 @@ class Tree():
 		Returns the reference to Node if node is found, else return False
 	'''
 	def lookup(self, price):
-		if price in self.price_map:
+		if price in self.price_tree:
 			return self.price_tree[price]
 		return None
 
@@ -94,9 +91,10 @@ class Tree():
 
 	ARGUMENTS:
 		price - The price to compare with
+		upperBound - Optional argument to set a upper bound on the range to return
 	'''
-	def hasPriceGreaterThan(self, price):
-		return [i for i in self.price_tree.key_slice(price,float("inf"))]
+	def hasPriceGreaterThan(self, price, upperBound=float("inf")):
+		return [i for i in self.price_tree.key_slice(price,upperBound)]
 
 	'''
 	DESCRIPTION:
@@ -109,9 +107,10 @@ class Tree():
 
 	ARGUMENTS:
 		price - The price to compare with
+		lowerBound - Optional argument to set a lower bound on the range to return
 	'''
-	def hasPriceSmallerThan(self, price):
-		return [i for i in self.price_tree.key_slice(float("-inf"), price)]
+	def hasPriceSmallerThan(self, price, lowerBound=float('-inf')):
+		return [i for i in self.price_tree.key_slice(lowerBound, price)]
 
 	'''
 	DESCRIPTION:
@@ -125,7 +124,7 @@ class Tree():
 		price - This price is used to identify the given price node to extract the order index from
 	'''
 	def getOrderIndexForPrice(self, price):
-		return self.price_map[price].getOrderIndex()
+		return self.price_tree[price].getOrderIndex()
 
 
 
