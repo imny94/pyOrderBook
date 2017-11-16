@@ -178,7 +178,7 @@ class APP(tk.Frame):
 		# call this function again in one second
 		self.book.after(1000,self.__testUpdate)
 
-
+#---------------------testing functions------------------------
 
 def test(file_name,col=None):
 	'''
@@ -215,8 +215,8 @@ def UnitTest():
 	asks=test("tests/ask_order.csv",3)
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
-
-UnitTest()
+# this is used for test only
+# UnitTest()
 
 
 
