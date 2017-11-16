@@ -1,5 +1,6 @@
 from bintrees import FastRBTree
 import Queue
+import numpy as np
 
 class Tree():
 
@@ -11,13 +12,18 @@ class Tree():
 			Price Map to find Nodes stored in binary tree quickly
 			Min price of Exchange
 			Max price of Exchange
+			Top 10 prices for display
+			Types of tree: 0 for bid tree
+						   1 for ask tree.
 
 	'''
-	def __init__(self):
+	def __init__(self,type_of_tree):
 		self.price_tree = FastRBTree()
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
+		self.first10prices=[] # fast to store in list, but need to sort everytime
+		self.tree_type=type_of_tree 
 
 	'''
 	DESCRIPTION:
@@ -47,6 +53,26 @@ class Tree():
 			node.addKey(key, numShares)
 
 		self.updateMaxAndMinPrices(price)
+
+		# check to add prices for display:
+		if len(self.first10prices) < 10:
+			self.first10prices.append(price)
+			self.first10prices.sort()
+		# add price if in top 10 range
+		if self.tree_type==0: #bid tree
+			if price >= self.first10prices[0]:
+				if price not in self.first10prices:
+					self.first10prices.pop[0]
+					self.first10prices.insert(0,price)
+					self.first10prices.sort()
+		else:
+			if price >= self.first10prices[-1]:
+				if price not in self.first10prices:
+					self.first10prices.pop[-1]
+					self.first10prices.insert(-1,price)
+					self.first10prices.sort()
+
+
 
 	'''
 	DESCRIPTION:
@@ -126,6 +152,43 @@ class Tree():
 	def getOrderIndexForPrice(self, price):
 		return self.price_tree[price].getOrderIndex()
 
+	def cancel(self):
+
+	#--------------------These member functions are for display purposes------------------
+	def fastDisplay(self):
+		'''
+		Display top ten prices of the current tree.
+		Use numpy array for fast storage.
+		Input:
+		Output:
+			Indexes of the top ten prices.
+		'''
+		display=np.zeros((10,4))
+		if self.tree_type==0: #bid tree
+			total=0
+			idx=0
+			for price in self.first10prices:
+				node=self.lookup(price)
+				count=node.getAccounts()
+				amount=node.getShares()
+				total+=amount
+				display[9-idx]=np.array(([count,amount,total,price]))
+				idx+=1
+		else: # ask tree
+			total=0
+			idx=0
+			for price in self.first10prices:
+				node=self.lookup(price)
+				count=node.getAccounts()
+				amount=node.getShares()
+				total+=amount
+				display[idx]=np.array(([price,toal,amount,count]))
+				idx+=1
+		return display
+
+
+
+
 
 
 class Node():
@@ -167,6 +230,11 @@ class Node():
 	'''
 	def NumOrders(self):
 		return self.orderQueue.qsize()
+
+	def getShares(self):
+		return self.numShares
+	def getAccounts(self):
+		return len(self.orderQueue)
 
 
 def main():
