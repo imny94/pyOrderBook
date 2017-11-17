@@ -118,6 +118,27 @@ class Tree():
 
 	'''
 	DESCRIPTION:
+		This function will return if the Price Tree is empty or not
+	'''
+	def isEmpty(self):
+		return self.price_tree.is_empty()
+
+	'''
+	DESCRIPTION:
+		This function will return the largest value on the Tree
+	'''
+	def getLargestPrice(self):
+		return self.price_tree.max_key() if not self.isEmpty() else None
+
+	'''
+	DESCRIPTION:
+		This function will return the smallest value on the Tree
+	'''
+	def getSmallestPrice(self):
+		return self.price_tree.min_key() if not self.isEmpty() else None
+
+	'''
+	DESCRIPTION:
 		This function will be used to scan the tree to see if there are any nodes with prices greater than given price.
 
 	Returns:
@@ -130,7 +151,7 @@ class Tree():
 		upperBound - Optional argument to set a upper bound on the range to return
 	'''
 	def hasPriceGreaterThan(self, price, upperBound=float("inf")):
-		return [i for i in self.price_tree.key_slice(price,upperBound)]
+		return [i for i in self.price_tree.key_slice(price,upperBound)] if not self.isEmpty() else None
 
 	'''
 	DESCRIPTION:
@@ -146,7 +167,7 @@ class Tree():
 		lowerBound - Optional argument to set a lower bound on the range to return
 	'''
 	def hasPriceSmallerThan(self, price, lowerBound=float('-inf')):
-		return [i for i in self.price_tree.key_slice(lowerBound, price)]
+		return [i for i in self.price_tree.key_slice(lowerBound, price)] if not self.isEmpty() else None
 
 	'''
 	DESCRIPTION:
@@ -160,7 +181,11 @@ class Tree():
 		price - This price is used to identify the given price node to extract the order index from
 	'''
 	def getOrderIndexForPrice(self, price):
-		return self.price_tree[price].getOrderIndex()
+		orderIndex = None
+		if not self.price_tree.is_empty():
+			node = self.price_tree[price]
+			orderIndex = node.getOrderIndex()
+		return orderIndex
 
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
@@ -231,7 +256,7 @@ class Node():
 		This function will extract the oldest value on the queue and return it
 	'''
 	def getOrderIndex(self):
-		if self.NumOrders() > 0:
+		if self.getNumOrders() > 0:
 			orderIndex, orderNumShares = self.orderQueue.pop(0)
 			self.numShares -= orderNumShares
 		else:
@@ -251,7 +276,6 @@ class Node():
 			self.orderQueue.remove(entry)
 			self.numShares -= numShares
 
-
 	'''
 	DESCRIPTION:
 		This is used to give the number of orders in the queue for current node
@@ -259,6 +283,10 @@ class Node():
 	def getNumOrders(self):
 		return len(self.orderQueue)
 
+	'''
+	DESCRIPTION:
+		This is used to get the number of shares that is being traded at this current price
+	'''
 	def getShares(self):
 		return self.numShares
 
