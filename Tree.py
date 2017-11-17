@@ -187,6 +187,16 @@ class Tree():
 			orderIndex = node.getOrderIndex()
 		return orderIndex
 
+	'''
+	DESCRIPTION:
+		This function is used to return the number of shares there are in a given node
+	'''
+	def getNumSharesForPrice(self, price):
+		node = self.lookup(price)
+		if node not None:
+			return node.getShares()
+		return None
+
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
 		'''
