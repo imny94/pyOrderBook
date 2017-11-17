@@ -18,10 +18,15 @@ class TransactionMatcher():
         while 1:
             minAskPrice = self.askTree.getSmallestPrice()
             maxBidPrice = self.bidTree.getLargestPrice()
+
+            if minAskPrice or maxBidPrice is None:
+                print "Either the ask tree or bid tree is empty! Waiting for tree to be populated"
+                time.sleep(1)
+                continue
             
             if maxBidPrice < minAskPrice:
                 time.sleep(1)
-                break
+                continue
 
             # Transaction is a profitable one!
             numAskingShares = self.askTree.getNumSharesForPrice(minAskPrice)
