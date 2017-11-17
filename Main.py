@@ -1,8 +1,10 @@
 import sys, getopt, csv, time
 from threading import Thread
+
 from Display import display
 import Tree
 import EventList
+import TransactionMatcher
 
 '''
 DESCRIPTION:
@@ -69,10 +71,13 @@ def orderBook(askTree, bidTree, eventList, inputFile, outputFile = None, saveOut
 '''
 DESCRIPTION:
 	This function will define the thread that is responsible for matching transactions with one another
+
+	It will create an instance of TransactionMatcher and runMatches
+	
 '''
 def matchTransactions(askTree, bidTree, eventList):
-	print "Matching Transactions!"
-	pass
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList)
+	matcher.runMatches()
 
 '''
 DESCRIPTION:
