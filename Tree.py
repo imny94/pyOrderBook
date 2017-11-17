@@ -193,7 +193,7 @@ class Tree():
 	'''
 	def getNumSharesForPrice(self, price):
 		node = self.lookup(price)
-		if node not None:
+		if node is not None:
 			return node.getShares()
 		return None
 
