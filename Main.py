@@ -8,6 +8,27 @@ import TransactionMatcher
 
 '''
 DESCRIPTION:
+	This function will be used to update the relevant trees and event list from csv row read in
+
+	Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
+'''
+def updateTreesAndEventList(askTree, bidTree, eventList, row):
+	print row
+	print "UpdateTrees and EventList"
+	# Add the given events into the eventlist
+	detailsForNode = eventList.add(EventList.Event(row[1:]))
+	# e.g of detailsForNode = (,0,0,1,2017/2/9,100,30)
+
+	AorB = row[0]
+	if AorB == "Ask":
+		askTree.add(detailsForNode)
+	elif AorB == "Bid":
+		bidTree.add(detailsForNode)
+	else:
+		assert False, "Invalid command: %s given!"%row
+
+'''
+DESCRIPTION:
 
 	This function will initialise the required variables
 		- The different binary trees that will be used to store the prices for different bidding price/asking price, along with the relevant transactions poised to happen for that given price
@@ -26,7 +47,7 @@ ARGUMENTS:
 	eventList - Reference to eventList
 	
 '''
-def orderBook(askTree, bidTree, eventList, inputFile, outputFile = None, saveOutput = False):
+def orderBook(askTree, bidTree, eventList, inputFile, numThreads, outputFile = None, saveOutput = False):
 
 	if inputFile == None:
 		assert False, "No input file for commands given!"
@@ -38,34 +59,30 @@ def orderBook(askTree, bidTree, eventList, inputFile, outputFile = None, saveOut
 	# Read in the csv file
 	with open(inputFile, "rb") as csvfile:
 		reader = csv.reader(csvfile)
-		# Row should be in format [Ask/Bid>,<Event Details>]
+		firstRow = csvfile.readline()
+		if not csv.Sniffer().has_header(firstRow):
+			updateTreesAndEventList(askTree, bidTree, eventList, firstRow)
+		# Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
 		for row in reader:
-			# Add the given events into the eventlist
-			detailsForNode = eventList.add(EventList.Event(row[1:]))
-			# e.g of detailsForNode = (1, 'price2', 'shares2')
-
-			AorB = row[0]
-			if AorB == "Ask":
-				askTree.add(detailsForNode)
-			elif AorB == "Bid":
-				bidTree.add(detailsForNode)
-			else:
-				assert False, "Invalid command: %s given!"%row
+			updateTreesAndEventList(askTree, bidTree, eventList, row)
 
 	print "Completed execution of instructions for order book!"
+	print askTree
+	print bidTree
+
 
 	# For testing only!
-	print "TESTING"
-	details = [1,1,"hi","nicholas","testing"]
-	details2 = [2,1,"hi","nicholas","testing"]
-	print details
-	askTree.add(details)
-	askTree.add(details2)
-	bidTree.add(details)
-	print "Finished adding"
-	time.sleep(2)
-	askTree.remove(1)
-	bidTree.remove(1)
+	# print "TESTING"
+	# details = [1,1,"hi","nicholas","testing"]
+	# details2 = [2,1,"hi","nicholas","testing"]
+	# print details
+	# askTree.add(details)
+	# askTree.add(details2)
+	# bidTree.add(details)
+	# print "Finished adding"
+	# time.sleep(2)
+	# askTree.remove(1)
+	# bidTree.remove(1)
 
 
 '''
@@ -75,8 +92,8 @@ DESCRIPTION:
 	It will create an instance of TransactionMatcher and runMatches
 	
 '''
-def matchTransactions(askTree, bidTree, eventList):
-	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList)
+def matchTransactions(askTree, bidTree, eventList, numThreads):
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, numThreads)
 	matcher.runMatches()
 
 '''
@@ -134,16 +151,17 @@ if __name__ == '__main__':
 			print "This should not happen!"
 			assert False, "unhandled option"
 
+	numThreads = 2
 	# Define the thread that will display UI
-	displayThread = Thread(target = display, args=(askTree, bidTree, eventList, ))
+	# displayThread = Thread(target = display, args=(askTree, bidTree, eventList, numThreads, ))
 	# Define the thread that will maintain order book
-	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, inputFile, outputFile, saveOutput ))
+	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, inputFile, numThreads, outputFile, saveOutput, ))
 	# Define the thread that will match up orders
-	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList))
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, numThreads, ))
 
 	# Start the different threads
-	displayThread.start()
+	# displayThread.start()
 	orderBookThread.start()
-	matchingThread.start()
+	# matchingThread.start()
 
 	print "Completed running all threads"
