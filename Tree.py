@@ -23,7 +23,7 @@ class Tree():
 		self.min_price = None
 		self.max_price = None
 		self.first10prices=[] # fast to store in list, but need to sort everytime
-		self.tree_type=type_of_tree 
+		self.tree_type = type_of_tree 
 
 	'''
 	DESCRIPTION:
@@ -162,8 +162,6 @@ class Tree():
 	def getOrderIndexForPrice(self, price):
 		return self.price_tree[price].getOrderIndex()
 
-	def cancel(self):
-
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
 		'''
@@ -179,7 +177,7 @@ class Tree():
 			idx=0
 			for price in self.first10prices:
 				node=self.lookup(price)
-				count=node.getAccounts()
+				count=node.getNumOrders()
 				amount=node.getShares()
 				total+=amount
 				display[9-idx]=np.array(([count,amount,total,price]))
@@ -189,7 +187,7 @@ class Tree():
 			idx=0
 			for price in self.first10prices:
 				node=self.lookup(price)
-				count=node.getAccounts()
+				count=node.getNumOrders()
 				amount=node.getShares()
 				total+=amount
 				display[idx]=np.array(([price,toal,amount,count]))
@@ -258,13 +256,12 @@ class Node():
 	DESCRIPTION:
 		This is used to give the number of orders in the queue for current node
 	'''
-	def NumOrders(self):
+	def getNumOrders(self):
 		return len(self.orderQueue)
 
 	def getShares(self):
 		return self.numShares
-	def getAccounts(self):
-		return len(self.orderQueue)
+
 
 
 def main():
