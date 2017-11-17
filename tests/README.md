@@ -1,11 +1,17 @@
 # NTU-BitCoin
 
-Server side receivied information
+Server side receives the following information:
+
 header: Idx,userID,Ask/Bid,Add/Cancel,time,#amount,price
+
 Ask:0
+
 Bid:1
+
 Add:1
+
 Cancel:0
+
 For add action, there is no Idx. for cancel action, the Idx is the previous 
 
 test case 1:
