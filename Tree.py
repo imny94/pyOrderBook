@@ -200,6 +200,14 @@ class Tree():
 			return node.getShares()
 		return None
 
+	'''
+	DESCRIPTION:
+		This function is used to return the list of satisfiable order index for a given price node
+	'''
+	def getSatisfiableOrders(self, price, numShares):
+		node = self.lookup(price)
+		return node.getSatisfiableOrders(numShares)
+
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
 		'''
@@ -302,6 +310,41 @@ class Node():
 	'''
 	def getShares(self):
 		return self.numShares
+
+	'''
+	DESCRIPTION:
+		This function is used to get the full orderQueue
+	'''
+	def getOrderQueue(self):
+		return self.orderQueue
+
+	'''
+	DESCRIPTION:
+		This function will iterate through the list of orders trying to reached the required number of shares as given as a parameter, while removing the order from the queue
+		If the number of shares has been met, update the new value of the first item in the queue
+	RETURNS:
+		A list of orderIndexes that can be satisfied
+		NOTE: The last item on the List will be a set that contains the order index of the order index that is now first in the queue, and the new number of shares that it has
+				It is designed as such so that the last item in the list return will be popped away
+	'''
+	def getSatisfiableOrders(self, sharesToMatch):
+		returnList = []
+		while sharesToMatch > 0:
+			orderIndex, orderNumShares = self.orderQueue[0]
+			if orderNumShares < sharesToMatch:
+				sharesToMatch -= orderNumShares
+				self.orderQueue.pop(0)
+				returnList.append(orderIndex)
+			# Demand has been satisfied, update the value of the first item in the queue after satisfing demand
+			else:
+				# Update the value of the first item on the queue
+				newNumShares = orderNumShares-sharesToMatch
+				self.orderQueue[0] = (orderIndex, newNumShares)
+				returnList.append((orderIndex, newNumShares))			
+			
+			sharesToMatch -= orderNumShares
+		
+		return returnList
 
 
 
