@@ -1,11 +1,13 @@
 import time
+import threading
 
 class TransactionMatcher():
 
-    def __init__(self, askTree, bidTree, eventList):
+    def __init__(self, askTree, bidTree, eventList, numThreads):
         self.askTree = askTree
         self.bidTree = bidTree
         self.eventList = eventList
+        self.numThreads = numThreads
 
     '''
     DESCRIPTION:
@@ -16,6 +18,9 @@ class TransactionMatcher():
     def runMatches(self):
         print "Matching Transactions!"
         while 1:
+            if threading.active_count() < self.numThreads:
+                print "An Error has occured on another Thread! Terminating current Transaction Matcher thread!"
+                break
             minAskPrice = self.askTree.getSmallestPrice()
             maxBidPrice = self.bidTree.getLargestPrice()
 
