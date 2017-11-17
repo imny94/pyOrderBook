@@ -9,8 +9,10 @@ Cancel:0
 For add action, there is no Idx. for cancel action, the Idx is the previous 
 
 test case 1:
-1 user only test for user add and cancel
-test case 2:
-2 user only test for 2 successful 
-test case 3:
-3 user test for 1 successful transaction, then a user cancel order
+Single user test for user add and cancel
+
+test case 2
+Two user test for 2 successful trades
+
+test case 3
+Three user test for 1 successful transaction, with one user cancelling his/her order
