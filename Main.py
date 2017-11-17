@@ -1,21 +1,8 @@
 import sys, getopt, csv, time
 from threading import Thread
-
+from Display import display
 import Tree
 import EventList
-
-'''
-DESCRIPTION:
-	This function will contain all the method calls required to run the UI on a separate thread
-'''
-def display(askTree, bidTree, eventList):
-	print "Display!"
-	while 1:
-		askTree.display()
-		bidTree.display()
-		time.sleep(1)
-	pass
-
 
 '''
 DESCRIPTION:
@@ -110,8 +97,8 @@ DESCRIPTION:
 if __name__ == '__main__':
 	
 	# Initialising variables
-	askTree = Tree.Tree()
-	bidTree = Tree.Tree()
+	askTree = Tree.Tree(1)
+	bidTree = Tree.Tree(0)
 	eventList = EventList.EventList()
 
 	# Read in input from the command line
