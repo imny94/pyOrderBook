@@ -91,10 +91,13 @@ class Tree():
 	'''
 	DESCRIPTION:
 		Removes the given price node from the tree
+	RETURNS:
+		Returns the removed node if it is required
 	'''
 	def remove(self, price):
 		node = self.price_tree.get(price)
 		self.volume -= node.numShares
+		return node
 
 	'''
 	DESCRIPTION:
