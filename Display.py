@@ -9,17 +9,15 @@ def display(askTree, bidTree, trades):
 	Input:
 		bidtree, asktree, trades
 	Output:
-
 	Display: 
 		UI 
 	'''
-	#------------------Get UI Framework---------------------
+	#UI Framework
 	UI = tk.Tk()
 	APP(UI)
-	
-	APP(UI).testUpdate(askTree, bidTree, trades)
+	APP(UI).UPDATE(askTree,bidTree,trades)
+	#APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
 	UI.mainloop()
-	# ------------update content every 0.2s ----------------
 
 
 def FullBook():
@@ -105,6 +103,12 @@ class APP(tk.Frame):
 			asks, bids, trades: refenence
 		Output:
 		"""
+		self.bids=bids
+		self.asks=asks
+		self.trades=trades
+		self.__update()
+		return 0
+
 	def testUpdate(self,asks,bids,trades):
 		'''
 		use generate test date to test the update functionality of the class.
@@ -163,6 +167,14 @@ class APP(tk.Frame):
 			num.config(font=("Helvetica",16))
 			num.place(x=x_start+idx*100,y=y_start,width=100,height=40)
 			idx+=1
+
+	def __update(self):
+		'''
+		update the content during an interval.
+		'''
+		self.updateBook(self.bids.fastDisplay(),self.asks.fastDisplay())
+		self.updateTrades(self.trades.fastDisplay())
+		self.book.after(1000,self.__update)
 
 	def __testUpdate(self):
 		'''
