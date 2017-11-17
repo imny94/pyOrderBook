@@ -72,6 +72,16 @@ class Tree():
 
 	'''
 	DESCRIPTION:
+		This function is used to remove orders from the given price node 
+			i.e. Cancelling of orders etc
+	'''
+	def removeOrderFromNode(self, price, orderIndex, numShares):
+		node = self.price_tree.get(price)
+		node.removeKey(orderIndex, numShares)
+
+
+	'''
+	DESCRIPTION:
 		Searches the Tree for any nodes with the given price
 		Returns the reference to Node if node is found, else return False
 	'''
@@ -141,17 +151,18 @@ class Node():
 	'''
 	def __init__(self, price, orderIndex, numShares):
 		# Initialize size of queue to be infinity
-		self.orderQueue = Queue.Queue(maxsize=0)
-		self.orderQueue.put(orderIndex)
+		self.orderQueue = []
+		self.orderQueue.append((orderIndex, numShares))
 		self.price = price
 		self.numShares = numShares
 
 	'''
 	DESCRIPTION:
 		This function will serve to update the respective queue on the node with new keys that will reference the data stored in eventlist
+		and update the value of numShares
 	'''
 	def addKey(self, key, numShares):
-		self.orderQueue.put(key)
+		self.orderQueue.append((key, numShares))
 		self.numShares += numShares
 
 	'''
@@ -159,14 +170,33 @@ class Node():
 		This function will extract the oldest value on the queue and return it
 	'''
 	def getOrderIndex(self):
-		return self.orderQueue.get()
+		if self.NumOrders() > 0:
+			orderIndex, orderNumShares = self.orderQueue.pop(0)
+			self.numShares -= orderNumShares
+		else:
+			orderIndex = None
+		return orderIndex
+
+	'''
+	DESCRIPTION:
+		This function will remove the given index from the orderQueue, and update the value of numShares
+	ARGUMENTS:
+		index - represents the index of the object to be removed from list
+		numShares - The number of shares that corresponds to this index being removed
+	'''
+	def removeKey(self, key, numShares):
+		entry = (key, numShares)
+		if entry in self.orderQueue:
+			self.orderQueue.remove(entry)
+			self.numShares -= numShares
+
 
 	'''
 	DESCRIPTION:
 		This is used to give the number of orders in the queue for current node
 	'''
 	def NumOrders(self):
-		return self.orderQueue.qsize()
+		return len(self.orderQueue)
 
 
 def main():
