@@ -38,11 +38,11 @@ class TransactionMatcher():
             numBiddingShares = self.bidTree.getNumSharesForPrice(maxBidPrice)
 
             # Everything can be sold
-            if numAskingShares > numBiddingShares:
+            if numAskingShares < numBiddingShares:
                 # Remove the price node from the askTree as all the orders in that node has been served
                 askNode = self.askTree.remove(minAskPrice)
-                # Get the order Queue in terms of the orderIndex only. Note that the orderQueue is a list of Sets, so that data is filtered here
-                askOrders = [i[0] for i in askNode.getOrderQueue()]
+                # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
+                askOrders = askNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
                 bidOrders = self.bidTree.getSatisfiableOrders(maxBidPrice, numBiddingShares)
                 # Note that the last item in bidOrders is a set that contains the order index to update
@@ -58,8 +58,8 @@ class TransactionMatcher():
             else:
                 # Remove the price node from the bidTree as all the orders in that node has been served
                 bidNode = self.bidTree.remove(maxBidPrice)
-                # Get the order Queue in terms of the orderIndex only. Note that the orderQueue is a list of Sets, so that data is filtered here
-                bidOrders = [i[0] for i in bidNode.getOrderQueue()]
+                # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
+                bidOrders = bidNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
                 askOrders = self.askTree.getSatisfiableOrders(minAskPrice, numAskingShares)
                 # Note that the last item in bidOrders is a set that contains the order index to update
