@@ -8,24 +8,46 @@ import TransactionMatcher
 
 '''
 DESCRIPTION:
-	This function will be used to update the relevant trees and event list from csv row read in
+	This function will be used to update the relevant trees from csv row read in
 
-	Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
+	Row should be in format [UserID, Time, Price, NumShares, Type]
 '''
-def updateTreesAndEventList(askTree, bidTree, eventList, row):
-	print row
-	print "UpdateTrees and EventList"
-	# Add the given events into the eventlist
-	detailsForNode = eventList.add(EventList.Event(row[1:]))
-	# e.g of detailsForNode = (,0,0,1,2017/2/9,100,30)
+def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutput = False, newEvent = None):
+	
+	####################Nested Function####################################################
+	def update(row):
+		print row
+		print "UpdateTrees"
+		# e.g of row = (,0,0,1,2017/2/9,100,30)
 
-	AorB = row[0]
-	if AorB == "Ask":
-		askTree.add(detailsForNode)
-	elif AorB == "Bid":
-		bidTree.add(detailsForNode)
-	else:
-		assert False, "Invalid command: %s given!"%row
+		AorB = row[-1]
+		if AorB.lower() == "ask":
+			askTree.add(row)
+		elif AorB.lower() == "bid":
+			bidTree.add(row)
+		else:
+			assert False, "Invalid command: %s given!"%row
+	################End of Nested Function ##########################################################
+
+	# Update the newEvent
+	if newEvent != None:
+		return update(newEvent)
+
+	if saveOutput:
+		if outputFile == None:
+			assert False, "No output file specified!"
+
+	if inputFile != None:
+		# Read in the csv file
+		with open(inputFile, "rb") as csvfile:
+			reader = csv.reader(csvfile)
+			firstRow = csvfile.readline()
+			if not csv.Sniffer().has_header(firstRow):
+				update(row)
+			# Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
+			for row in reader:
+				update(row)
+	
 
 '''
 DESCRIPTION:
@@ -127,11 +149,12 @@ if __name__ == '__main__':
 	inputFile = None
 	outputFile = None
 	saveOutput = False
+	showDisplay = False
 
 	argv = sys.argv[1:]
 	try:
 		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
-		opts, args = getopt.getopt(argv, "hi:os", ["help", "input=", "output=", "saveOutput"] )
+		opts, args = getopt.getopt(argv, "hiosd", ["help", "input=", "output=", "saveOutput", "display"] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
@@ -147,21 +170,51 @@ if __name__ == '__main__':
 			outputFile = arg
 		elif opt in ("-s", "--saveOutput"):
 			saveOutput = True
+		elif opt in ("-d", "--display"):
+			showDisplay = True
 		else:
 			print "This should not happen!"
 			assert False, "unhandled option"
 
+	# Complete populating relevant information from csv file
+	updateTrees(askTree, bidTree, inputFile, outputFile, saveOutput)
+
 	numThreads = 2
 	# Define the thread that will display UI
-	# displayThread = Thread(target = display, args=(askTree, bidTree, eventList, numThreads, ))
-	# Define the thread that will maintain order book
-	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, inputFile, numThreads, outputFile, saveOutput, ))
+	if showDisplay:
+		numThreads += 1
+		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, numThreads, ))
+	# Define the thread that allows updating of order book
+	# orderBookThread = Thread(target=updateTrees, args=(askTree, bidTree, inputFile, outputFile, saveOutput, numThreads, ))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, numThreads, ))
 
 	# Start the different threads
-	# displayThread.start()
-	orderBookThread.start()
+	
+	if showDisplay:
+		displayThread.start()
+	
 	# matchingThread.start()
+
+	# orderBookThread.start()
+
+	# Define some constants to do error checking with the user input for new events
+	numAttributes = 5
+
+	# Read in user inputs to add/cancel ask/bid orders
+	try:
+		while 1:
+			print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
+			newEvent = None
+			rawNewEvent = raw_input(">")
+			newEvent = [i.strip() for i in rawNewEvent.split(",")]
+			#Data filtering to makes sure that the new input is in the right format
+			if len(newEvent) != numAttributes:
+				print "Wrong Format!"
+				continue
+			updateTrees(askTree, bidTree, newEvent=newEvent)
+
+	except KeyboardInterrupt as identifier:
+		print "Ending Program!"
 
 	print "Completed running all threads"
