@@ -207,8 +207,11 @@ if __name__ == '__main__':
 			print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
 			newEvent = None
 			rawNewEvent = raw_input(">")
+			if rawNewEvent.lower() in ("stop","quit","exit"):
+				print "Terminating Program"
+				break
 			newEvent = [i.strip() for i in rawNewEvent.split(",")]
-			#Data filtering to makes sure that the new input is in the right format
+			# Data filtering to makes sure that the new input is in the right format
 			if len(newEvent) != numAttributes:
 				print "Wrong Format!"
 				continue
