@@ -1,4 +1,4 @@
-import Tkinter as tk
+import Tkinter as tk # capital letter for 2.7 lower letter for 3.5+
 from PIL import Image, ImageTk
 import numpy as np
 import time
@@ -49,11 +49,12 @@ class APP(tk.Frame):
 		icon = ImageTk.PhotoImage(icon)
 		ether=tk.Label(self.book,image=icon,bg='black')
 		ether.place(x=120,y=20)
+
+		#----market prices---
 		# market price.
 		title=tk.Label(self.book,text="ETH/USD:",fg='white',bg='black')
 		title.config(font=("Arial",40))
 		title.place(x=240,y=20,width=240,height=80)
-
 		#high price of today
 		high=tk.Label(self.book,text="HIGH",fg='gray',bg='black')
 		high.config(font=("Helvetica",20))
@@ -63,7 +64,7 @@ class APP(tk.Frame):
 		low.config(font=("Helvetica",20))
 		low.place(x=720,y=60,width=120,height=30)
 
-		#-----------------Order Books-------------------------
+		#----Order Books-----
 		# three Book names
 		self.__book_name(["Bid Book","Ask Book","Trade Book"],100)
 		# Book contennt names
@@ -71,44 +72,33 @@ class APP(tk.Frame):
 		self.__content_name(["PRICE","TOTAL","AMOUNT","COUNT"],400)
 		self.__content_name(["TIME","PRICE","AMOUNT"],800)
 
-	def updateBook(self,bids,asks):
-		"""
-		Update Bid Book and Ask book.
-		"""
-		row=300
-		ask=400
-		bid=0
-		for bid_row in bids:
-			self.__content_row(bid_row,bid,row)
-			row+=40
-		row=300
-		for ask_row in asks:
-			self.__content_row(ask_row,ask,row)
-			row+=40
-	def updateTrades(self,trades):
-		"""
-		Update the trades Book.
-		"""
-		row=300
-		for trade_row in trades:
-			self.__content_row(trade_row,800,row)
-			row+=40
+		#---------------useful buttons----------
+
+
+
+
+
 
 	def UPDATE(self,asks,bids,trades):
 		"""
 		get order tree and transaction records reference, then call the display function
-		every 1 second to get a matrix form data. finally update the corresponding
-		records. 
-		(two order books, records, current market price, max and min porice of the day)
+		every to get the display data, convert them into numpy array, save it in the class,
+		and finally update the corresponding item in the display.
+		update items: two order books: every 1 sec
+					  records: every 2 sec
+					  current market price: every 10 sec
+					  max and min porice of the day: every 10 sec
 		Input:
-			asks, bids, trades: refenence
+			asks, bids, trades: refenence to the correspoinding functions
 		Output:
 		"""
 		self.bids=bids
 		self.asks=asks
 		self.trades=trades
+		# update records
 		self.__updateBook()
-
+		self.__updateRecords()
+		# update prices
 		return 0
 
 	def testUpdate(self,asks,bids,trades): # this is for test only!
@@ -122,6 +112,8 @@ class APP(tk.Frame):
 		self.asks=asks
 		self.trades=trades
 		self.__testUpdate()# update itself every 1 second
+		self.__showMarketPrice()
+		self.__showMaxMin()
 		return 0
 
 	#---------------------private functions------------------------------
@@ -170,20 +162,84 @@ class APP(tk.Frame):
 			num.place(x=x_start+idx*100,y=y_start,width=100,height=40)
 			idx+=1
 
+	def __showBook(self,bids,asks):
+		"""
+		Update Bid Book and Ask book.
+		"""
+		row=300
+		ask=400
+		bid=0
+		for bid_row in bids:
+			self.__content_row(bid_row,bid,row)
+			row+=40
+		row=300
+		for ask_row in asks:
+			self.__content_row(ask_row,ask,row)
+			row+=40
+
+	def __showTrades(self,trades):
+		"""
+		Update the trades Book.
+		"""
+		row=300
+		for trade_row in trades:
+			self.__content_row(trade_row,800,row)
+			row+=40
+
+	def __getPrices(self):
+		"""
+		get all the successful transaction prices from the DB,
+		then compute the current market price and max, min prices
+		of a day.
+		all in 4 digits
+		"""
+
+
+	def __showMarketPrice(self):
+		"""
+		show the current market price.
+		"""
+		title=tk.Label(self.book,text="6900.2366",fg='white',bg='black')
+		title.config(font=("Arial",40))
+		title.place(x=480,y=20,width=240,height=80)
+
+	def __showMaxMin(self):
+		"""
+		show the max and min price of the day.
+		"""
+		high=tk.Label(self.book,text="6933.5326",fg='gray',bg='black')
+		high.config(font=("Helvetica",20))
+		high.place(x=840,y=20,width=120,height=30)
+
+		low=tk.Label(self.book,text="6898.7833",fg='gray',bg='black')
+		low.config(font=("Helvetica",20))
+		low.place(x=840,y=60,width=120,height=30)
+
+
 	def __updateBook(self):
 		'''
 		update the content during an 1 second interval.
 		'''
-		self.updateBook(self.bids.fastDisplay(),self.asks.fastDisplay())
+		self.__showBook(self.bids.fastDisplay(),self.asks.fastDisplay())
 		self.book.after(1000,self.__updateBook)
 
 	def __updateRecords(self):
 		'''
 		update the successful records every 2 seconds
 		'''
-		self.updateTrades(self.trades.fastDisplay())
+		self.__showTrades(self.trades.fastDisplay())
 		self.book.after(2000,self.__updateRecords)
 
+	def __updatePrices(self):
+		"""
+		update the market pricews every 10 seconds
+		"""
+		# compute market prices
+		self.__getPrices()
+		# update it
+		self.__showMarketPrice()
+		self.__showMaxMin()
+		self.book.after(10000,self.__updatePrices)
 
 	def __testUpdate(self): # this is for test only!
 		'''
@@ -192,8 +248,8 @@ class APP(tk.Frame):
 		if self.test_times==29:
 			return 0
 		# update bids and asks order book
-		self.updateBook(self.bids[self.test_times],self.asks[self.test_times]) 
-		self.updateTrades(self.trades[self.test_times])
+		self.__showBook(self.bids[self.test_times],self.asks[self.test_times]) 
+		self.__showTrades(self.trades[self.test_times])
 		# update test times
 		self.test_times+=1
 		# call this function again in one second
