@@ -1,7 +1,14 @@
-import Tkinter as tk
+import Tkinter as tk # capital letter for 2.7 lower letter for 3.5+
 from PIL import Image, ImageTk
 import numpy as np
 import time
+'''
+important!!!!!!!!!! 
+when display from the transactions records.
+the display called GetPrices and Get10Entries
+when calling the function the given name is "transactions".
+so if create a table with different names, please change it!!!
+'''
 
 def display(askTree, bidTree, trades):
 	'''
@@ -15,8 +22,8 @@ def display(askTree, bidTree, trades):
 	#UI Framework
 	UI = tk.Tk()
 	APP(UI)
-	#APP(UI).UPDATE(askTree,bidTree,trades)
-	APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
+	APP(UI).UPDATE(askTree,bidTree,trades)
+	#APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
 	UI.mainloop()
 
 
@@ -49,11 +56,12 @@ class APP(tk.Frame):
 		icon = ImageTk.PhotoImage(icon)
 		ether=tk.Label(self.book,image=icon,bg='black')
 		ether.place(x=120,y=20)
+
+		#----market prices---
 		# market price.
 		title=tk.Label(self.book,text="ETH/USD:",fg='white',bg='black')
 		title.config(font=("Arial",40))
 		title.place(x=240,y=20,width=240,height=80)
-
 		#high price of today
 		high=tk.Label(self.book,text="HIGH",fg='gray',bg='black')
 		high.config(font=("Helvetica",20))
@@ -63,7 +71,7 @@ class APP(tk.Frame):
 		low.config(font=("Helvetica",20))
 		low.place(x=720,y=60,width=120,height=30)
 
-		#-----------------Order Books-------------------------
+		#----Order Books-----
 		# three Book names
 		self.__book_name(["Bid Book","Ask Book","Trade Book"],100)
 		# Book contennt names
@@ -71,45 +79,34 @@ class APP(tk.Frame):
 		self.__content_name(["PRICE","TOTAL","AMOUNT","COUNT"],400)
 		self.__content_name(["TIME","PRICE","AMOUNT"],800)
 
-	def updateBook(self,bids,asks):
-		"""
-		Update Bid Book and Ask book.
-		"""
-		row=300
-		ask=400
-		bid=0
-		for bid_row in bids:
-			self.__content_row(bid_row,bid,row)
-			row+=40
-		row=300
-		for ask_row in asks:
-			self.__content_row(ask_row,ask,row)
-			row+=40
-	def updateTrades(self,trades):
-		"""
-		Update the trades Book.
-		"""
-		row=300
-		for trade_row in trades:
-			self.__content_row(trade_row,800,row)
-			row+=40
+		#---------------useful buttons----------
+
+
+
 
 	def UPDATE(self,asks,bids,trades):
 		"""
 		get order tree and transaction records reference, then call the display function
-		every 1 second to get a matrix form data. finally update the corresponding
-		records. 
+		every to get the display data, convert them into numpy array, save it in the class,
+		and finally update the corresponding item in the display.
+		update items: two order books: every 1 sec
+					  records: every 2 sec
+					  current market price: every 10 sec
+					  max and min porice of the day: every 10 sec
 		Input:
-			asks, bids, trades: refenence
+			asks, bids, trades: refenence to the correspoinding functions
 		Output:
 		"""
 		self.bids=bids
 		self.asks=asks
 		self.trades=trades
-		self.__update()
+		# update records
+		self.__updateBook()
+		self.__updateRecords()
+		# update prices
 		return 0
 
-	def testUpdate(self,asks,bids,trades):
+	def testUpdate(self,asks,bids,trades): # this is for test only!
 		'''
 		use generate test date to test the update functionality of the class.
 		Input:
@@ -120,6 +117,9 @@ class APP(tk.Frame):
 		self.asks=asks
 		self.trades=trades
 		self.__testUpdate()# update itself every 1 second
+		self.__showMarketPrice()
+		self.__showMaxMin()
+		self.__updatePrices()
 		return 0
 
 	#---------------------private functions------------------------------
@@ -168,23 +168,98 @@ class APP(tk.Frame):
 			num.place(x=x_start+idx*100,y=y_start,width=100,height=40)
 			idx+=1
 
-	def __update(self):
-		'''
-		update the content during an interval.
-		'''
-		self.updateBook(self.bids.fastDisplay(),self.asks.fastDisplay())
-		self.updateTrades(self.trades.fastDisplay())
-		self.book.after(1000,self.__update)
+	def __showBook(self,bids,asks):
+		"""
+		Update Bid Book and Ask book.
+		"""
+		row=300
+		ask=400
+		bid=0
+		for bid_row in bids:
+			self.__content_row(bid_row,bid,row)
+			row+=40
+		row=300
+		for ask_row in asks:
+			self.__content_row(ask_row,ask,row)
+			row+=40
 
-	def __testUpdate(self):
+	def __showTrades(self,trades):
+		"""
+		Update the trades Book.
+		"""
+		row=300
+		for trade_row in trades:
+			self.__content_row(trade_row,800,row)
+			row+=40
+
+	def __getPrices(self):
+		"""
+		get all the successful transaction prices from the DB,
+		then compute the current market price and max, min prices
+		of a day.
+		all in 4 digits
+		"""
+		prices=self.trades.GetPrices("transactions")
+		self.market_price=np.average(prices)
+		self.min_price=min(prices)
+		self.max_price=max(prices)
+
+
+	def __showMarketPrice(self):
+		"""
+		show the current market price.
+		"""
+		title=tk.Label(self.book,text=self.market_price,fg='white',bg='black')
+		title.config(font=("Arial",40))
+		title.place(x=480,y=20,width=240,height=80)
+
+	def __showMaxMin(self):
+		"""
+		show the max and min price of the day.
+		"""
+		high=tk.Label(self.book,text=self.max_price,fg='gray',bg='black')
+		high.config(font=("Helvetica",20))
+		high.place(x=840,y=20,width=120,height=30)
+
+		low=tk.Label(self.book,text=self.min_price,fg='gray',bg='black')
+		low.config(font=("Helvetica",20))
+		low.place(x=840,y=60,width=120,height=30)
+
+
+	def __updateBook(self):
+		'''
+		update the content during an 1 second interval.
+		'''
+		self.__showBook(self.bids.fastDisplay(),self.asks.fastDisplay())
+		self.book.after(1000,self.__updateBook)
+
+	def __updateRecords(self):
+		'''
+		update the successful records every 2 seconds
+		'''
+		self.__showTrades(self.trades.Get10Entries("transactions"))
+		self.book.after(2000,self.__updateRecords)
+
+	def __updatePrices(self):
+		"""
+		update the market pricews every 10 seconds
+		"""
+		# compute market prices
+		self.__getPrices()
+		# update it
+		self.__showMarketPrice()
+		self.__showMaxMin()
+		self.book.after(10000,self.__updatePrices)
+
+	def __testUpdate(self): # this is for test only!
 		'''
 		iterating funnction to update itself.
 		'''
 		if self.test_times==29:
 			return 0
 		# update bids and asks order book
-		self.updateBook(self.bids[self.test_times],self.asks[self.test_times]) 
-		self.updateTrades(self.trades[self.test_times])
+		self.__showBook(self.bids[self.test_times],self.asks[self.test_times]) 
+		self.__showTrades(self.trades[self.test_times])
 		# update test times
 		self.test_times+=1
 		# call this function again in one second
@@ -192,7 +267,7 @@ class APP(tk.Frame):
 
 #---------------------testing functions------------------------
 
-def test(file_name,col=None):
+def test(file_name,col=None): # this is for test only!
 	'''
 	this is for testing the display functionality
 	Input: 
@@ -217,7 +292,7 @@ def test(file_name,col=None):
 	return datas
 
 
-def UnitTest():
+def UnitTest(): # this is for test only!
 	"""
 	This is for unit testing.
 	I ramdomly choose 30 period of times and store them in csv files. so the maximum 
@@ -227,8 +302,8 @@ def UnitTest():
 	asks=test("tests/ask_order.csv",3)
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
-# this is used for test only
-UnitTest()
+
+#UnitTest() # this is used for test only
 
 
 
