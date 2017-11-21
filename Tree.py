@@ -34,19 +34,20 @@ class Tree():
 		details - [UserID, Time, Price, NumShares, Type]
 	'''
 	def add(self, details):
-		print "Adding!"
-		price = details[2]
-		numShares = details[3]
-		self.volume += int(numShares)
+		# print details
+		# print "Adding!"
+		price = float(details[2])
+		numShares = int(details[3])
+		self.volume += numShares
 		node = self.lookup(price)
-		if node == None:
-			print "New node!"
+		if node is None:
+			# print "New node!"
 			# Add node to tree
 			newNode = Node(price, details)
 			self.price_tree.insert(price, newNode)
 
 		else:
-			print "Exisiting node!"
+			# print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
 			node.addKey(details)
 
@@ -94,7 +95,7 @@ class Tree():
 	'''
 	def removeNode(self, price):
 		node = self.price_tree.pop(price)
-		self.volume -= node.numShares
+		self.volume -= int(node.numShares)
 		return node
 
 	'''
@@ -261,7 +262,7 @@ class Node():
 		#TODO: Add details to the queue
 		self.orderQueue[self.__getEventHash(event)] = event
 		self.price = price
-		self.numShares = event[3]
+		self.numShares = int(event[3])
 
 	'''
 	DESCRIPTION:
@@ -282,7 +283,7 @@ class Node():
 	'''
 	def addKey(self, event):
 		self.orderQueue[self.__getEventHash(event)] = event
-		self.numShares += event[3]
+		self.numShares += int(event[3])
 
 	'''
 	DESCRIPTION:
@@ -292,7 +293,7 @@ class Node():
 		event = None
 		if self.getNumOrders() > 0:
 			event = self.orderQueue.popitem(last=False)
-			self.numShares -= event[3]
+			self.numShares -= int(event[3])
 		return event
 
 	'''
@@ -307,7 +308,7 @@ class Node():
 		if entry in self.orderQueue:
 			# newEvent = [UserID, Time, Price, NumShares, Type]
 			newEvent = self.orderQueue.pop(entry, None)
-			self.numShares -= newEvent[3]
+			self.numShares -= int(newEvent[3])
 
 	'''
 	DESCRIPTION:
@@ -344,8 +345,11 @@ class Node():
 		while sharesToMatch > 0:
 			# Note that the event here is merely a pointer that points to the item in the dictionary, 
 			# so changing this value will change values in the dictionary as well
-			event = iter.next()
-			orderNumShares = event[3]
+			try:
+				event = iter.next()
+			except StopIteration:
+				break
+			orderNumShares = int(event[3])
 			if orderNumShares < sharesToMatch:
 				sharesToMatch -= orderNumShares
 				event = self.orderQueue.popitem(last=False)
@@ -354,7 +358,7 @@ class Node():
 			else:
 				# Update the value of the first item on the queue
 				newNumShares = orderNumShares-sharesToMatch
-				event[3] = newNumShares
+				event[3] = int(newNumShares)
 				returnList.append(event)
 				#NOTE: This might be a cause some issues as we are returning a pointer to event, which might cause event to inadvertently be editted...
 				sharesToMatch -= orderNumShares
