@@ -104,6 +104,8 @@ class APP(tk.Frame):
 		self.__updateBook()
 		self.__updateRecords()
 		# update prices
+		self.__showMaxMin()
+		self.__updatePrices()
 		return 0
 
 	def testUpdate(self,asks,bids,trades): # this is for test only!
