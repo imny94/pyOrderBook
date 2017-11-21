@@ -2,6 +2,13 @@ import Tkinter as tk # capital letter for 2.7 lower letter for 3.5+
 from PIL import Image, ImageTk
 import numpy as np
 import time
+'''
+important!!!!!!!!!! 
+when display from the transactions records.
+the display called GetPrices and Get10Entries
+when calling the function the given name is "transactions".
+so if create a table with different names, please change it!!!
+'''
 
 def display(askTree, bidTree, trades):
 	'''
@@ -15,8 +22,8 @@ def display(askTree, bidTree, trades):
 	#UI Framework
 	UI = tk.Tk()
 	APP(UI)
-	#APP(UI).UPDATE(askTree,bidTree,trades)
-	APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
+	APP(UI).UPDATE(askTree,bidTree,trades)
+	#APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
 	UI.mainloop()
 
 
@@ -77,8 +84,6 @@ class APP(tk.Frame):
 
 
 
-
-
 	def UPDATE(self,asks,bids,trades):
 		"""
 		get order tree and transaction records reference, then call the display function
@@ -114,6 +119,7 @@ class APP(tk.Frame):
 		self.__testUpdate()# update itself every 1 second
 		self.__showMarketPrice()
 		self.__showMaxMin()
+		self.__updatePrices()
 		return 0
 
 	#---------------------private functions------------------------------
@@ -193,13 +199,17 @@ class APP(tk.Frame):
 		of a day.
 		all in 4 digits
 		"""
+		prices=self.trades.GetPrices("transactions")
+		self.market_price=np.average(prices)
+		self.min_price=min(prices)
+		self.max_price=max(prices)
 
 
 	def __showMarketPrice(self):
 		"""
 		show the current market price.
 		"""
-		title=tk.Label(self.book,text="6900.2366",fg='white',bg='black')
+		title=tk.Label(self.book,text=self.market_price,fg='white',bg='black')
 		title.config(font=("Arial",40))
 		title.place(x=480,y=20,width=240,height=80)
 
@@ -207,11 +217,11 @@ class APP(tk.Frame):
 		"""
 		show the max and min price of the day.
 		"""
-		high=tk.Label(self.book,text="6933.5326",fg='gray',bg='black')
+		high=tk.Label(self.book,text=self.max_price,fg='gray',bg='black')
 		high.config(font=("Helvetica",20))
 		high.place(x=840,y=20,width=120,height=30)
 
-		low=tk.Label(self.book,text="6898.7833",fg='gray',bg='black')
+		low=tk.Label(self.book,text=self.min_price,fg='gray',bg='black')
 		low.config(font=("Helvetica",20))
 		low.place(x=840,y=60,width=120,height=30)
 
@@ -227,7 +237,7 @@ class APP(tk.Frame):
 		'''
 		update the successful records every 2 seconds
 		'''
-		self.__showTrades(self.trades.fastDisplay())
+		self.__showTrades(self.trades.Get10Entries("transactions"))
 		self.book.after(2000,self.__updateRecords)
 
 	def __updatePrices(self):
@@ -293,7 +303,7 @@ def UnitTest(): # this is for test only!
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
 
-UnitTest() # this is used for test only
+#UnitTest() # this is used for test only
 
 
 
