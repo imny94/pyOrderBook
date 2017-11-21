@@ -121,10 +121,26 @@ class DataBase():
 
         final_result = [list(i) for i in result]
         np_array = np.array(final_result)
-        #print np_array
+        print np_array
             
         self.connection.commit()
         return np_array
+
+    '''
+    DESCRIPTION:
+        Gets the ten latest entries from Table
+    '''
+    def Get10Entries(self, TableName):
+        TableName = TableName.lower()
+
+        if(TableName == "transactions"):
+            np_arr = self.FetchKEntries(TableName, 10)
+            extracted_arr = np_arr[:,[3,5,4]] #Time, NumShares, Price
+        else:
+            pass
+
+        print extracted_arr
+        return extracted_arr
 
     '''
     DESCRIPTION: 
@@ -153,7 +169,7 @@ class DataBase():
         sqlite3.connect("Events.db").close()
 
 
-
+'''
 
 #Test cases
 def main():
@@ -175,9 +191,11 @@ def main():
     database.InsertData("transactions",("1", "Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "2"))
     database.FetchKEntries("transactions")
     database.GetPrices("transactions")
+    database.Get10Entries("transactions")
     database.CloseConnection()
     database.RemoveTable("transactions")
 
 
 if __name__ == '__main__':
 	main()
+'''
