@@ -227,8 +227,10 @@ def UnitTest():
 	asks=test("tests/ask_order.csv",3)
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
-# this is used for test only
-UnitTest()
+
+if __name__ == "__main__":
+	# this is used for test only
+	UnitTest()
 
 
 
