@@ -31,26 +31,24 @@ class Tree():
 		If Node is already present, update relevant Node 
 
 	ARGUMENTS:
-		details - (1, 'price2', 'shares2') -> [key, event.price, event.numShares]
-				This will contain the relevant details that is to be stored in the node
+		details - [UserID, Time, Price, NumShares, Type]
 	'''
 	def add(self, details):
 		print "Adding!"
-		key = details[0]
-		price = details[1]
-		numShares = details[2]
+		price = details[2]
+		numShares = details[3]
 		self.volume += int(numShares)
-		node = self.lookup(details[1])
+		node = self.lookup(price)
 		if node == None:
 			print "New node!"
 			# Add node to tree
-			newNode = Node(price, key, numShares)
+			newNode = Node(price, details)
 			self.price_tree.insert(price, newNode)
 
 		else:
 			print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
-			node.addKey(key, numShares)
+			node.addKey(price, details)
 
 		self.updateMaxAndMinPrices(price)
 
@@ -94,8 +92,8 @@ class Tree():
 	RETURNS:
 		Returns the removed node if it is required
 	'''
-	def remove(self, price):
-		node = self.price_tree.get(price)
+	def removeNode(self, price):
+		node = self.price_tree.pop(price)
 		self.volume -= node.numShares
 		return node
 
@@ -104,15 +102,15 @@ class Tree():
 		This function is used to remove orders from the given price node 
 			i.e. Cancelling of orders etc
 	'''
-	def removeOrderFromNode(self, price, orderIndex, numShares):
+	def removeOrderFromNode(self, price, event):
 		node = self.price_tree.get(price)
-		node.removeKey(orderIndex, numShares)
+		node.removeEvent(event)
 
 
 	'''
 	DESCRIPTION:
 		Searches the Tree for any nodes with the given price
-		Returns the reference to Node if node is found, else return False
+		Returns the reference to Node if node is found, else return None
 	'''
 	def lookup(self, price):
 		if price in self.price_tree:
@@ -144,7 +142,7 @@ class Tree():
 	DESCRIPTION:
 		This function will be used to scan the tree to see if there are any nodes with prices greater than given price.
 
-	Returns:
+	RETURNS:
 		1) a list of prices greater than the given price if they exist
 
 		2) an Empty List otherwise
@@ -174,21 +172,21 @@ class Tree():
 
 	'''
 	DESCRIPTION:
-		This function will be used to return the oldest order index on the respective price node
+		This function will be used to return the oldest event on the respective price node
 		While doing so, the queue in the price node should be updated
 
 	RETURNS:
-		The oldest order Index of the respective price node
+		The oldest event of the respective price node
 
 	ARGUMENTS:
-		price - This price is used to identify the given price node to extract the order index from
+		price - This price is used to identify the given price node to extract the event from
 	'''
-	def getOrderIndexForPrice(self, price):
-		orderIndex = None
+	def getNextEventForPrice(self, price):
+		event = None
 		if not self.price_tree.is_empty():
 			node = self.price_tree[price]
-			orderIndex = node.getOrderIndex()
-		return orderIndex
+			event = node.getNextEvent()
+		return event
 
 	'''
 	DESCRIPTION:
@@ -243,7 +241,8 @@ class Tree():
 
 
 
-
+from collections import OrderedDict
+import hashlib
 
 class Node():
 	'''
@@ -254,35 +253,45 @@ class Node():
 
 	ARGUMENTS:
 		price - The price this node represents
-		orderIndex - The index of a given event as stored in eventList
+		event - [UserID, Time, Price, NumShares, Type]
 	'''
-	def __init__(self, price, orderIndex, numShares):
+	def __init__(self, price, event):
 		# Initialize size of queue to be infinity
-		self.orderQueue = []
-		self.orderQueue.append((orderIndex, numShares))
+		self.orderQueue = OrderedDict()
+		#TODO: Add details to the queue
+		self.orderQueue[self.__getEventHash(event)] = event
 		self.price = price
-		self.numShares = numShares
+		self.numShares = event[3]
+
+	'''
+	DESCRIPTION:
+		This function is used to return a MD5 hash of a given event so it can be added to the queue/ be looked up quickly
+	'''
+	def __getEventHash(self, event):
+		return hashlib.md5().update(event).digest()
 
 	'''
 	DESCRIPTION:
 		This function will serve to update the respective queue on the node with new keys that will reference the data stored in eventlist
 		and update the value of numShares
+
+	ARGUMENTS:
+		event - [UserID, Time, Price, NumShares, Type]
 	'''
-	def addKey(self, key, numShares):
-		self.orderQueue.append((key, numShares))
-		self.numShares += numShares
+	def addKey(self, event):
+		self.orderQueue[self.__getEventHash(event)] = event
+		self.numShares += event[3]
 
 	'''
 	DESCRIPTION:
 		This function will extract the oldest value on the queue and return it
 	'''
-	def getOrderIndex(self):
+	def getNextEvent(self):
+		event = None
 		if self.getNumOrders() > 0:
-			orderIndex, orderNumShares = self.orderQueue.pop(0)
-			self.numShares -= orderNumShares
-		else:
-			orderIndex = None
-		return orderIndex
+			event = self.orderQueue.popitem(last=False)
+			self.numShares -= event[3]
+		return event
 
 	'''
 	DESCRIPTION:
@@ -291,11 +300,12 @@ class Node():
 		index - represents the index of the object to be removed from list
 		numShares - The number of shares that corresponds to this index being removed
 	'''
-	def removeKey(self, key, numShares):
-		entry = (key, numShares)
+	def removeEvent(self, event):
+		entry = self.__getEventHash(event)
 		if entry in self.orderQueue:
-			self.orderQueue.remove(entry)
-			self.numShares -= numShares
+			# newEvent = [UserID, Time, Price, NumShares, Type]
+			newEvent = self.orderQueue.pop(entry, None)
+			self.numShares -= newEvent[3]
 
 	'''
 	DESCRIPTION:
@@ -324,25 +334,28 @@ class Node():
 		If the number of shares has been met, update the new value of the first item in the queue
 	RETURNS:
 		A list of orderIndexes that can be satisfied
-		NOTE: The last item on the List will be a set that contains the order index of the order index that is now first in the queue, and the new number of shares that it has
-				It is designed as such so that the last item in the list return will be popped away
+		NOTE The last item on the list returned should not be directly modified if any changes needs to be made, as it is the pointer which points directly to the event in the node
 	'''
 	def getSatisfiableOrders(self, sharesToMatch):
 		returnList = []
+		iter = self.orderQueue.itervalues()
 		while sharesToMatch > 0:
-			orderIndex, orderNumShares = self.orderQueue[0]
+			# Note that the event here is merely a pointer that points to the item in the dictionary, 
+			# so changing this value will change values in the dictionary as well
+			event = iter.next()
+			orderNumShares = event[3]
 			if orderNumShares < sharesToMatch:
 				sharesToMatch -= orderNumShares
-				self.orderQueue.pop(0)
-				returnList.append(orderIndex)
+				event = self.orderQueue.popitem(last=False)
+				returnList.append(event)
 			# Demand has been satisfied, update the value of the first item in the queue after satisfing demand
 			else:
 				# Update the value of the first item on the queue
 				newNumShares = orderNumShares-sharesToMatch
-				self.orderQueue[0] = (orderIndex, newNumShares)
-				returnList.append((orderIndex, newNumShares))			
-			
-			sharesToMatch -= orderNumShares
+				event[3] = newNumShares
+				returnList.append(event)
+				#NOTE: This might be a cause some issues as we are returning a pointer to event, which might cause event to inadvertently be editted...
+				sharesToMatch -= orderNumShares
 		
 		return returnList
 
