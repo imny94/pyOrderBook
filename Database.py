@@ -1,17 +1,17 @@
 import sqlite3
-
+import numpy as np
 
 class DataBase():
 
     def __init__(self,type_of_db):
-        self.connection = sqlite3.connect("Transaction.db")
+        self.connection = sqlite3.connect("Events.db")
         self.connection.text_factory = str #converting SQL output from Unicode to Bytestring
         self.cursor = self.connection.cursor()
     
     '''
     DESCRIPTION:
         creates new table if it exists
-        successful: stores transactions with following columns:
+        transaction: stores transactions with following columns:
             txID: transaction ID
             User1ID: user1
             User2ID: user2
@@ -24,7 +24,7 @@ class DataBase():
         #Specifying SQL command to create table and defining fields
         TableName = TableName.lower()
 
-        if  TableName == "successful":
+        if TableName == "transactions":
             sql_command = """
             CREATE TABLE IF NOT EXISTS %s ( 
             TxID INTEGER, 
@@ -33,10 +33,8 @@ class DataBase():
             EventTime DATETIME, 
             Price NUMERIC(10,4),
             NumShares NUMERIC(10,18),
-            Type INT);"""%TableName
-            #Executing SQL command
-            self.cursor.execute(sql_command)
-
+            EventType INT);"""%TableName
+            #self.cursor.execute(sql_command)
         elif TableName == "bid" or TableName == "ask":
             sql_command = """
             CREATE TABLE IF NOT EXISTS %s (  
@@ -44,13 +42,12 @@ class DataBase():
             EventTime DATETIME, 
             Price NUMERIC(10,4),
             NumShares NUMERIC(10,18),
-            Type INT);"""%TableName
-            #Executing SQL command
-            self.cursor.execute(sql_command)
-            
+            EventType INT);"""%TableName
         else:
-            print "Table name is not \"Bid\", \"Ask\", or \"Successful\"." #if table name is not what we want
-            pass
+            print "Table name is not \"Bid\", \"Ask\", or \"Transactions\"." #if table name is not what we want
+            return
+        #Executing SQL command
+        self.cursor.execute(sql_command)
         self.connection.commit()
 
 
@@ -58,9 +55,11 @@ class DataBase():
     DESCRIPTION:
         Removes the table IF it exists
     '''
-    def RemoveTable(self,DropTableName):
+    def RemoveTable(self,TableName):
         # delete table from database
-        delete_command = """DROP TABLE IF EXISTS %s""" %DropTableName
+        TableName = TableName.lower()
+
+        delete_command = """DROP TABLE IF EXISTS %s"""%TableName
         #Executing SQL command
         self.cursor.execute(delete_command)
         self.connection.commit()
@@ -75,17 +74,18 @@ class DataBase():
         #if data has 5 arguments, its a Ask/Bid Data
         if len(Data) == 5:
             #Insert Ask/Bid Data into the table
-            insert_command = """INSERT INTO {0} (UserID, EventTime, Price, NumShares, Type)
+            insert_command = """INSERT INTO {0} (UserID, EventTime, Price, NumShares, EventType)
             VALUES ('{1}','{2}',{3},{4},{5});""".format(TableName,Data[0],Data[1],Data[2],Data[3],Data[4])
             #UserID & Time data requires addition quote for formatting
-            self.cursor.execute(insert_command)
-        #else data must have 7 arguments, its a successful Data
+            #self.cursor.execute(insert_command)
+        #else data must have 7 arguments, its a transaction Data
         else:
-            #insert successful data into the table
-            insert_command = """INSERT INTO %s (TxID, User1ID, User2ID, EventTime, Price, NumShares, Type)
+            #insert transaction data into the table
+            insert_command = """INSERT INTO %s (TxID, User1ID, User2ID, EventTime, Price, NumShares, EventType)
             VALUES (%s,'%s','%s','%s',%s,%s,%s);"""%(TableName,Data[0],Data[1],Data[2],Data[3],Data[4],Data[5],Data[6]) 
             #User1ID/User2ID & Time data requires addition quote for formatting
-            self.cursor.execute(insert_command)
+        
+        self.cursor.execute(insert_command)
         self.connection.commit()
 
 
@@ -94,7 +94,7 @@ class DataBase():
         Fetches certain number of entries
         Returns 
     '''
-    def FetchData(self, TableName, Quantity=1000):     #Fetch top 1,000 entry by default
+    def FetchKEntries(self, TableName, Quantity=1000):     #Fetch top 1,000 entry by default
         #Highest Bid first
         TableName = TableName.lower()
 
@@ -110,53 +110,74 @@ class DataBase():
             print("Fetching Asks: ")
             result = self.cursor.fetchmany(Quantity)
         #Latest Transaction first
-        elif TableName == "successful":
+        elif TableName == "transactions":
             self.cursor.execute("""Select * FROM {0}
             ORDER BY EventTime DESC""".format(TableName))
             print("Fetching Transaction: ")
             result = self.cursor.fetchmany(Quantity)
         else:
-            print("Table not of type Ask/Bid/Transaction")
+            print("Table not of type Ask/Bid/Transactions")
             return
 
         final_result = [list(i) for i in result]
-        print final_result
+        np_array = np.array(final_result)
+        #print np_array
             
         self.connection.commit()
-        return final_result
-    
+        return np_array
+
+    '''
+    DESCRIPTION: 
+        Gets all prices in descending order from particular table
+        Returns: numpy array of prices
+    '''
+    def GetPrices(self, TableName):
+        TableName = TableName.lower()
+
+        self.cursor.execute("""Select Price From {0}
+        ORDER By Price DESC""".format(TableName))
+
+        result = self.cursor.fetchall()
+        self.connection.commit()
+
+        final_result = [list(i)[0] for i in result]
+        np_array = np.array(final_result)
+
+        #print("np aray for prices: ")
+        #print np_array
+        return np_array
+
     #Close the Database
     def CloseConnection(self):
         #Close the Database
-        sqlite3.connect("Transaction.db").close()
+        sqlite3.connect("Events.db").close()
 
 
-'''
+
 
 #Test cases
 def main():
     database = DataBase("")
-    database.NewTable("Successful")
-    # database.RemoveTable("Successful")
+    database.NewTable("transactions")
+    # database.RemoveTable("transaction")
 
-    # database.InsertData("Successful",("1", "1111-11-11 11:11.11.254","89", "1", "2"))
+    # database.InsertData("ask",("1", "1111-11-11 11:11.11.254","89", "1", "2"))
     # database.InsertData("ask",("1", "1111-11-11 11:11.11.574","100", "1", "2"))
     # database.InsertData("ask",("1", "1111-11-11 11:11.11.124","77", "1", "2"))
     # database.InsertData("ask",("1", "1111-11-11 11:11.11.125","90", "1", "2"))
     # database.InsertData("ask",("1", "1111-11-11 11:11.11.344","67", "1", "2"))
     # database.FetchData("ask")
 
-    database.InsertData("Successful",("1", "Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "2"))
-    database.InsertData("Successful",("1", "Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "2"))
-    database.InsertData("Successful",("1", "Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "2"))
-    database.InsertData("Successful",("1", "Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "2"))
-    database.InsertData("Successful",("1", "Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "2"))
-    database.FetchData("Successful")
+    database.InsertData("transactions",("1", "Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "2"))
+    database.InsertData("transactions",("1", "Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "2"))
+    database.InsertData("transactions",("1", "Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "2"))
+    database.InsertData("transactions",("1", "Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "2"))
+    database.InsertData("transactions",("1", "Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "2"))
+    database.FetchKEntries("transactions")
+    database.GetPrices("transactions")
     database.CloseConnection()
-    database.RemoveTable("Successful")
+    database.RemoveTable("transactions")
 
 
 if __name__ == '__main__':
 	main()
-
-'''
