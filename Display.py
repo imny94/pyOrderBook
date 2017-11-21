@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import numpy as np
 import time
 
-def display(askTree, bidTree, trades, numThreads):
+def display(askTree, bidTree, trades):
 	'''
 	run the display
 	Input:
@@ -15,8 +15,8 @@ def display(askTree, bidTree, trades, numThreads):
 	#UI Framework
 	UI = tk.Tk()
 	APP(UI)
-	APP(UI).UPDATE(askTree,bidTree,trades)
-	#APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
+	#APP(UI).UPDATE(askTree,bidTree,trades)
+	APP(UI).testUpdate(askTree, bidTree, trades) #this is for test only.
 	UI.mainloop()
 
 
@@ -228,7 +228,7 @@ def UnitTest():
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
 # this is used for test only
-# UnitTest()
+UnitTest()
 
 
 
