@@ -99,6 +99,7 @@ class APP(tk.Frame):
 		get order tree and transaction records reference, then call the display function
 		every 1 second to get a matrix form data. finally update the corresponding
 		records. 
+		(two order books, records, current market price, max and min porice of the day)
 		Input:
 			asks, bids, trades: refenence
 		Output:
@@ -106,10 +107,11 @@ class APP(tk.Frame):
 		self.bids=bids
 		self.asks=asks
 		self.trades=trades
-		self.__update()
+		self.__updateBook()
+
 		return 0
 
-	def testUpdate(self,asks,bids,trades):
+	def testUpdate(self,asks,bids,trades): # this is for test only!
 		'''
 		use generate test date to test the update functionality of the class.
 		Input:
@@ -168,15 +170,22 @@ class APP(tk.Frame):
 			num.place(x=x_start+idx*100,y=y_start,width=100,height=40)
 			idx+=1
 
-	def __update(self):
+	def __updateBook(self):
 		'''
-		update the content during an interval.
+		update the content during an 1 second interval.
 		'''
 		self.updateBook(self.bids.fastDisplay(),self.asks.fastDisplay())
-		self.updateTrades(self.trades.fastDisplay())
-		self.book.after(1000,self.__update)
+		self.book.after(1000,self.__updateBook)
 
-	def __testUpdate(self):
+	def __updateRecords(self):
+		'''
+		update the successful records every 2 seconds
+		'''
+		self.updateTrades(self.trades.fastDisplay())
+		self.book.after(2000,self.__updateRecords)
+
+
+	def __testUpdate(self): # this is for test only!
 		'''
 		iterating funnction to update itself.
 		'''
@@ -192,7 +201,7 @@ class APP(tk.Frame):
 
 #---------------------testing functions------------------------
 
-def test(file_name,col=None):
+def test(file_name,col=None): # this is for test only!
 	'''
 	this is for testing the display functionality
 	Input: 
@@ -217,7 +226,7 @@ def test(file_name,col=None):
 	return datas
 
 
-def UnitTest():
+def UnitTest(): # this is for test only!
 	"""
 	This is for unit testing.
 	I ramdomly choose 30 period of times and store them in csv files. so the maximum 
@@ -227,8 +236,8 @@ def UnitTest():
 	asks=test("tests/ask_order.csv",3)
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
-# this is used for test only
-UnitTest()
+
+UnitTest() # this is used for test only
 
 
 
