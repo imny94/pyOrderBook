@@ -1,4 +1,4 @@
-import sys, getopt, csv, time
+import sys, getopt, csv, time, threading
 from threading import Thread
 
 from Display import display
@@ -16,8 +16,6 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 	
 	####################Nested Function####################################################
 	def update(row):
-		print row
-		print "UpdateTrees"
 		# e.g of row = (,0,0,1,2017/2/9,100,30)
 
 		AorB = row[-1]
@@ -40,10 +38,15 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 	if inputFile != None:
 		# Read in the csv file
 		with open(inputFile, "rb") as csvfile:
-			reader = csv.reader(csvfile)
+			reader = csv.reader(csvfile, delimiter=",")
 			firstRow = csvfile.readline()
 			if not csv.Sniffer().has_header(firstRow):
-				update(row)
+				print "hi"
+				update(firstRow)
+			else:
+				print "HAS HEADER!"
+				print firstRow
+				print csv.Sniffer().has_header(firstRow)
 			# Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
 			for row in reader:
 				update(row)
@@ -114,8 +117,8 @@ DESCRIPTION:
 	It will create an instance of TransactionMatcher and runMatches
 	
 '''
-def matchTransactions(askTree, bidTree, eventList, numThreads):
-	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, numThreads)
+def matchTransactions(askTree, bidTree, eventList, terminateFlag):
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, terminateFlag)
 	matcher.runMatches()
 
 '''
@@ -124,6 +127,12 @@ DESCRIPTION:
 '''
 def usage():
 	print "****************USAGE*****************\nArguments are passed to this program via a flag and argument, and settings are set by toggling the flags available.\n\nThis program supports the following flags:\n	-h/--help\n 	-i/--input\n	-o/--output"
+
+def terminateSequence(terminateFlag=None):
+	print "Terminating Program ... Killing all threads"
+	if terminateFlag is not None:
+		terminateFlag.set()
+
 
 '''
 DESCRIPTION:
@@ -154,7 +163,7 @@ if __name__ == '__main__':
 	argv = sys.argv[1:]
 	try:
 		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
-		opts, args = getopt.getopt(argv, "hiosd", ["help", "input=", "output=", "saveOutput", "display"] )
+		opts, args = getopt.getopt(argv, "hi:o:sd", ["help", "inputFile=", "outputFile=", "saveOutput", "display"] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
@@ -164,9 +173,9 @@ if __name__ == '__main__':
 		if opt in ("-h", "--help"):
 			usage()
 			sys.exit()
-		elif opt in ("-i", "--input"):
+		elif opt in ("-i", "--inputFile"):
 			inputFile = arg
-		elif opt in ("-o", "--output"):
+		elif opt in ("-o", "--outputFile"):
 			outputFile = arg
 		elif opt in ("-s", "--saveOutput"):
 			saveOutput = True
@@ -179,22 +188,19 @@ if __name__ == '__main__':
 	# Complete populating relevant information from csv file
 	updateTrees(askTree, bidTree, inputFile, outputFile, saveOutput)
 
-	numThreads = 2
+	terminateFlag = threading.Event()
 	# Define the thread that will display UI
 	if showDisplay:
-		numThreads += 1
-		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, numThreads, ))
-	# Define the thread that allows updating of order book
-	# orderBookThread = Thread(target=updateTrees, args=(askTree, bidTree, inputFile, outputFile, saveOutput, numThreads, ))
+		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
 	# Define the thread that will match up orders
-	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, numThreads, ))
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, terminateFlag))
 
 	# Start the different threads
 	
 	if showDisplay:
 		displayThread.start()
-	
-	# matchingThread.start()
+
+	matchingThread.start()
 
 	# orderBookThread.start()
 
@@ -204,11 +210,14 @@ if __name__ == '__main__':
 	# Read in user inputs to add/cancel ask/bid orders
 	try:
 		while 1:
+			if terminateFlag.isSet():
+				terminateSequence(terminateFlag)
+				break
 			print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
 			newEvent = None
 			rawNewEvent = raw_input(">")
 			if rawNewEvent.lower() in ("stop","quit","exit"):
-				print "Terminating Program"
+				terminateSequence(terminateFlag)
 				break
 			newEvent = [i.strip() for i in rawNewEvent.split(",")]
 			# Data filtering to makes sure that the new input is in the right format
@@ -218,6 +227,4 @@ if __name__ == '__main__':
 			updateTrees(askTree, bidTree, newEvent=newEvent)
 
 	except KeyboardInterrupt as identifier:
-		print "Ending Program!"
-
-	print "Completed running all threads"
+		terminateSequence(terminateFlag)
