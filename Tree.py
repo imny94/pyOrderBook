@@ -48,7 +48,7 @@ class Tree():
 		else:
 			print "Exisiting node!"
 			# Node exists! Add new order Index to Queue in the respective price node
-			node.addKey(price, details)
+			node.addKey(details)
 
 		self.updateMaxAndMinPrices(price)
 
@@ -268,7 +268,9 @@ class Node():
 		This function is used to return a MD5 hash of a given event so it can be added to the queue/ be looked up quickly
 	'''
 	def __getEventHash(self, event):
-		return hashlib.md5().update(event).digest()
+		m = hashlib.md5()
+		m.update(str(event))
+		return m.digest()
 
 	'''
 	DESCRIPTION:
