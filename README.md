@@ -8,7 +8,7 @@
 	don't manipulate with the master branch!
 	if you are going to merge it, explain your implementation to others
 	and if they get your idea and don't have any other disagreement. 
-	Then, it is safe to merge and let others know.
+	Then, it is safe to merge and don't forget to let others know.
 
 
 ### 2.  write down your progress!
@@ -17,7 +17,7 @@
 
 	Everyone should write down 
 	what you are currenntly implementing and how is your current progress.
-	It it very important for others to catch on !!!!!!!!
+	It is very important for others to catch on !!!!!!!!
 
 
 ### 3.  If you are going to catch up other one's part, talk to them first !!
