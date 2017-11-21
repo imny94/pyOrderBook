@@ -117,8 +117,8 @@ DESCRIPTION:
 	It will create an instance of TransactionMatcher and runMatches
 	
 '''
-def matchTransactions(askTree, bidTree, eventList, terminateFlag):
-	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, terminateFlag)
+def matchTransactions(askTree, bidTree, eventList, terminateFlag, verbose = False):
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, terminateFlag, verbose)
 	matcher.runMatches()
 
 '''
@@ -159,11 +159,12 @@ if __name__ == '__main__':
 	outputFile = None
 	saveOutput = False
 	showDisplay = False
+	verbose = False
 
 	argv = sys.argv[1:]
 	try:
 		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
-		opts, args = getopt.getopt(argv, "hi:o:sd", ["help", "inputFile=", "outputFile=", "saveOutput", "display"] )
+		opts, args = getopt.getopt(argv, "hi:o:sdv", ["help", "inputFile=", "outputFile=", "saveOutput", "display","verbose"] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
@@ -181,6 +182,8 @@ if __name__ == '__main__':
 			saveOutput = True
 		elif opt in ("-d", "--display"):
 			showDisplay = True
+		elif opt in ("-v", "--verbose"):
+			verbose = True
 		else:
 			print "This should not happen!"
 			assert False, "unhandled option"
@@ -193,7 +196,7 @@ if __name__ == '__main__':
 	if showDisplay:
 		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
 	# Define the thread that will match up orders
-	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, terminateFlag))
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, terminateFlag, verbose, ))
 
 	# Start the different threads
 	

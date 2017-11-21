@@ -8,11 +8,16 @@ logging.basicConfig(level=logging.DEBUG,
 
 class TransactionMatcher():
 
-    def __init__(self, askTree, bidTree, eventList, terminateFlag):
+    def __init__(self, askTree, bidTree, eventList, terminateFlag, verbose):
         self.askTree = askTree
         self.bidTree = bidTree
         self.eventList = eventList
         self.terminateFlag = terminateFlag
+        self.verbose = verbose
+
+    def debugLog(self,msg):
+        if self.verbose:
+            logging.debug(msg)
 
     '''
     DESCRIPTION:
@@ -24,14 +29,14 @@ class TransactionMatcher():
         logging.debug("Matching Transactions!")
         while 1:
             if self.terminateFlag.isSet():
-                logging.debug("Terminating Thread!")
+                self.debugLog("Terminating Thread!")
                 break
             minAskPrice = self.askTree.getSmallestPrice()
             maxBidPrice = self.bidTree.getLargestPrice()
             # logging.debug("minAskPrice: %s , maxBidPrice: %s"%(minAskPrice,maxBidPrice))
 
             if minAskPrice is None or maxBidPrice is None:
-                logging.debug("Either the ask tree or bid tree is empty! Waiting for tree to be populated")
+                self.debugLog("Either the ask tree or bid tree is empty! Waiting for tree to be populated")
                 time.sleep(1)
                 continue
             

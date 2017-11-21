@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import numpy as np
 import time
 
-def display(askTree, bidTree, trades):
+def display(askTree, bidTree, trades, terminateFlag):
 	'''
 	run the display
 	Input:
