@@ -17,7 +17,7 @@ class Tree():
 						   1 for ask tree.
 
 	'''
-	def __init__(self,type_of_tree, database):
+	def __init__(self,type_of_tree, databaseQueue):
 		self.price_tree = FastRBTree()
 		self.volume = 0
 		self.min_price = None
@@ -25,7 +25,7 @@ class Tree():
 		self.maxNumNodes = 100000
 		# Allow for 20% deviation
 		self.hardLimit = self.maxNumNodes * 1.2
-		self.database = database
+		self.databaseQueue = databaseQueue
 		self.amtToPrune = 10
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
@@ -95,7 +95,7 @@ class Tree():
 				# askTree - Keep minimum prices
 				if price > self.getLargestPrice():
 					# Add to database
-					self.insertToDatabase(details)
+					self.insertIntoDatabase(details)
 				else:
 					# Add to tree, if hardlimit has not been reached
 					if self.sizeOfTree() < self.hardLimit:
@@ -107,15 +107,15 @@ class Tree():
 							updateToTree()
 							# Function call to add the bottom x number of events into the DB
 							for i in xrange(self.amtToPrune):
-								self.insertToDatabase(self.removeNode(self.getLargestPrice()))
+								self.insertIntoDatabase(self.removeNode(self.getLargestPrice()))
 						else:
 							# Add event to the DB
-							self.insertToDatabase(details)
+							self.insertIntoDatabase(details)
 			else:
 				# bidTree - Keep maximum prices
 				if price < self.getSmallestPrice():
 					# Add to database
-					self.insertToDatabase(details)
+					self.insertIntoDatabase(details)
 				else:
 					# Add to tree, if hardlimit has not been reached
 					if self.sizeOfTree() < self.hardLimit:
@@ -127,10 +127,10 @@ class Tree():
 							updateToTree()
 							# Function call to add the bottom x number of events into the DB
 							for i in xrange(self.amtToPrune):
-								self.insertToDatabase(self.removeNode(self.getSmallestPrice()))
+								self.insertIntoDatabase(self.removeNode(self.getSmallestPrice()))
 						else:
 							# Add event to the DB
-							self.insertToDatabase(details)
+							self.insertIntoDatabase(details)
 
 
 
@@ -276,11 +276,11 @@ class Tree():
 	ARGUMENTS:
 		event - [EventID, UserID, Time, Price, NumShares, Type]
 	'''
-	def insertToDatabase(self, event):
+	def insertIntoDatabase(self, event):
 		# add event hash to the the event for faster indexing in the database
 		event.insert(0,self.__getEventHash(event))
 		# insert the event into the database
-		self.database.InsertData(event[5].lowercase(), event)
+		self.databaseQueue.put((event[5].lowercase(), event))
 		
 		return None
 
