@@ -8,10 +8,10 @@ logging.basicConfig(level=logging.DEBUG,
 
 class TransactionMatcher():
 
-    def __init__(self, askTree, bidTree, eventList, terminateFlag, verbose):
+    def __init__(self, askTree, bidTree, databaseQueue, terminateFlag, verbose):
         self.askTree = askTree
         self.bidTree = bidTree
-        self.eventList = eventList
+        self.databaseQueue = databaseQueue
         self.terminateFlag = terminateFlag
         self.verbose = verbose
 
