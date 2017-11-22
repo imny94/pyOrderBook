@@ -22,8 +22,14 @@ class Tree():
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
+		self.maxNumNodes = 100000
+		# Allow for 20% deviation
+		self.hardLimit = self.maxNumNodes * 1.2
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
+
+	def sizeOfTree(self):
+		return len(self.price_tree)
 
 	'''
 	DESCRIPTION:
@@ -39,37 +45,70 @@ class Tree():
 		price = float(details[2])
 		numShares = int(details[3])
 		self.volume += numShares
-		node = self.lookup(price)
-		if node is None:
-			# print "New node!"
-			# Add node to tree
-			newNode = Node(price, details)
-			self.price_tree.insert(price, newNode)
+		########################NESTED FUNCTION################################
+		def updateToTree():
+			node = self.lookup(price)
+			if node is None:
+				# print "New node!"
+				# Add node to tree
+				newNode = Node(price, details)
+				self.price_tree.insert(price, newNode)
 
+			else:
+				# print "Exisiting node!"
+				# Node exists! Add new order Index to Queue in the respective price node
+				node.addKey(details)
+
+			self.updateMaxAndMinPrices(price)
+
+			# check to add prices for display:
+			if len(self.first10prices) < 10:
+				self.first10prices.append(price)
+				self.first10prices.sort()
+			# add price if in top 10 range
+			if self.tree_type==0: #bid tree
+				if price >= self.first10prices[0]:
+					if price not in self.first10prices:
+						self.first10prices.pop[0]
+						self.first10prices.insert(0,price)
+						self.first10prices.sort()
+			else:
+				if price >= self.first10prices[-1]:
+					if price not in self.first10prices:
+						self.first10prices.pop[-1]
+						self.first10prices.insert(-1,price)
+						self.first10prices.sort()
+		#####################END OF NESTED FUNCTION#############################
+
+		# Define 2 states for the adding of new nodes, one when the tree's depth limit has been reached, and another otherwise
+		if self.sizeOfTree() < self.maxNumNodes:
+			# Limit has not been reached, continue adding nodes to tree
+			updateToTree()
 		else:
-			# print "Exisiting node!"
-			# Node exists! Add new order Index to Queue in the respective price node
-			node.addKey(details)
+			# Tree limit has been reached, need to start deciding which data to keep in tree and DB
 
-		self.updateMaxAndMinPrices(price)
+			# Different logic for bid and ask tree - bid tree keeps highest prices, ask tree keeps lowest prices
+			# 0 - bidTree, 1 - askTree
+			if self.tree_type:
+				# askTree - Keep minimum prices
+				if price < self.getSmallestPrice():
+					# Add to database
+					#TODO: Function call to add to DB
+					pass
+				else:
+					# Add to tree, if hardlimit has not been reached
+					if self.sizeOfTree() < self.hardLimit:
+						updateToTree()
+					# Hard Limit has been reached, start pruning tree
+					else:
+						if price > self.getSmallestPrice():
+							# Add this event to the node, but we move the bottom x events into the DB
+							updateToTree()
+							#TODO: Function call to add the bottom x number of events into the DB
+						else:
+							# Add event to the DB
+							#TODO: Function call to add the event into the DB
 
-		# check to add prices for display:
-		if len(self.first10prices) < 10:
-			self.first10prices.append(price)
-			self.first10prices.sort()
-		# add price if in top 10 range
-		if self.tree_type==0: #bid tree
-			if price >= self.first10prices[0]:
-				if price not in self.first10prices:
-					self.first10prices.pop[0]
-					self.first10prices.insert(0,price)
-					self.first10prices.sort()
-		else:
-			if price >= self.first10prices[-1]:
-				if price not in self.first10prices:
-					self.first10prices.pop[-1]
-					self.first10prices.insert(-1,price)
-					self.first10prices.sort()
 
 
 
@@ -292,7 +331,8 @@ class Node():
 	def getNextEvent(self):
 		event = None
 		if self.getNumOrders() > 0:
-			event = self.orderQueue.popitem(last=False)
+			# item here is the key : value pair, so event is in the second index
+			key, event = self.orderQueue.popitem(last=False)
 			self.numShares -= int(event[3])
 		return event
 
