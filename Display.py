@@ -104,6 +104,8 @@ class APP(tk.Frame):
 		self.__updateBook()
 		self.__updateRecords()
 		# update prices
+		self.__showMaxMin()
+		self.__updatePrices()
 		return 0
 
 	def testUpdate(self,asks,bids,trades): # this is for test only!
@@ -117,9 +119,9 @@ class APP(tk.Frame):
 		self.asks=asks
 		self.trades=trades
 		self.__testUpdate()# update itself every 1 second
-		self.__showMarketPrice()
-		self.__showMaxMin()
-		self.__updatePrices()
+		# self.__showMarketPrice()
+		# self.__showMaxMin()
+		# self.__updatePrices()
 		return 0
 
 	#---------------------private functions------------------------------
@@ -232,6 +234,7 @@ class APP(tk.Frame):
 		'''
 		self.__showBook(self.bids.fastDisplay(),self.asks.fastDisplay())
 		self.book.after(1000,self.__updateBook)
+
 
 	def __updateRecords(self):
 		'''
