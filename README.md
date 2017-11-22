@@ -1,5 +1,41 @@
 # NTU-BitCoin
 
+xxx is a fast order book implementation of Cryptocurrency like Bitcoin or Etherium. It uses a fast tree implementation to match transactions and DB to store records.
+It also shows user a user-friendly user interface to display the current market price and order books. 
+
+## Setup/Installation
+
+#### Python version: python 2.7.10
+
+#### Packages Dependencies
+
+###### tkinter, PIL, sqlite3
+
+Please run the following to get the necessary dependencies.
+It will automically recognize the running platform you are currently using and install
+all the necessary dependencies.
+'''
+python setup.py
+''' 
+If failed, please manually install all the packages based on your running platform.
+#### run the program
+
+we provide two options for user to run our program:
+
+###### run from a csv file
+
+You can choose one historical data from our tests folder and run it with the following command.
+'''
+
+'''
+###### run from internal prompt
+You can run the following command to run the program.
+'''
+
+'''
+And when you are in the program, we support several commands for you to use.
+
+
 
 ## Standard to follow when writing your part:
 
@@ -22,3 +58,4 @@
 
 ### 3.  If you are going to catch up other one's part, talk to them first !!
 	don't redo work! talk to them and know their current status!
+
