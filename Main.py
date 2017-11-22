@@ -150,10 +150,10 @@ DESCRIPTION:
 if __name__ == '__main__':
 	
 	# Initialising variables
-	askTree = Tree.Tree(1)
-	bidTree = Tree.Tree(0)
-	eventList = EventList.EventList()
 	databaseQueue = multiprocessing.Queue(maxsize=0)
+	askTree = Tree.Tree(1, databaseQueue)
+	bidTree = Tree.Tree(0, databaseQueue)
+	eventList = EventList.EventList()
 
 	# Read in input from the command line
 	inputFile = None
