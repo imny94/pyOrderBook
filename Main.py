@@ -1,4 +1,4 @@
-import sys, getopt, csv, time, threading
+import sys, getopt, csv, time, threading, multiprocessing
 from threading import Thread
 
 from Display import display
@@ -117,8 +117,8 @@ DESCRIPTION:
 	It will create an instance of TransactionMatcher and runMatches
 	
 '''
-def matchTransactions(askTree, bidTree, eventList, terminateFlag, verbose = False):
-	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, terminateFlag, verbose)
+def matchTransactions(askTree, bidTree, databaseQueue, terminateFlag, verbose = False):
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, databaseQueue, terminateFlag, verbose)
 	matcher.runMatches()
 
 '''
@@ -153,6 +153,7 @@ if __name__ == '__main__':
 	askTree = Tree.Tree(1)
 	bidTree = Tree.Tree(0)
 	eventList = EventList.EventList()
+	databaseQueue = multiprocessing.Queue(maxsize=0)
 
 	# Read in input from the command line
 	inputFile = None
@@ -196,7 +197,7 @@ if __name__ == '__main__':
 	if showDisplay:
 		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
 	# Define the thread that will match up orders
-	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, terminateFlag, verbose, ))
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, databaseQueue, terminateFlag, verbose, ))
 
 	# Start the different threads
 	
