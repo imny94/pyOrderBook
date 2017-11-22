@@ -1,5 +1,5 @@
 from bintrees import FastRBTree
-import Queue
+import Queue, copy
 import numpy as np
 
 class Tree():
@@ -22,11 +22,11 @@ class Tree():
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
-		self.maxNumNodes = 100000
+		self.maxNumNodes = 4#100000
 		# Allow for 20% deviation
 		self.hardLimit = self.maxNumNodes * 1.2
 		self.databaseQueue = databaseQueue
-		self.amtToPrune = 10
+		self.amtToPrune = 2
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
 
@@ -91,46 +91,44 @@ class Tree():
 
 			# Different logic for bid and ask tree - bid tree keeps highest prices, ask tree keeps lowest prices
 			# 0 - bidTree, 1 - askTree
-			if self.tree_type:
+			if self.tree_type == 1:
 				# askTree - Keep minimum prices
 				if price > self.getLargestPrice():
 					# Add to database
 					self.insertIntoDatabase(details)
 				else:
-					# Add to tree, if hardlimit has not been reached
-					if self.sizeOfTree() < self.hardLimit:
-						updateToTree()
-					# Hard Limit has been reached, start pruning tree
-					else:
-						if price < self.getSmallestPrice():
-							# Add this event to the node, but we move the bottom x events into the DB
-							updateToTree()
-							# Function call to add the bottom x number of events into the DB
-							for i in xrange(self.amtToPrune):
-								self.insertIntoDatabase(self.removeNode(self.getLargestPrice()))
-						else:
-							# Add event to the DB
-							self.insertIntoDatabase(details)
-			else:
+					# Add this event to the node, but we move the bottom x events into the DB if hard limit is reached
+					updateToTree()
+
+					if self.sizeOfTree() > self.hardLimit:	
+						# Hard Limit has been reached, start pruning tree
+						# Function call to add the bottom x number of events into the DB
+						for i in xrange(self.amtToPrune):
+							nodeToRemove = self.removeNode(self.getLargestPrice())
+							event = nodeToRemove.getNextEvent()
+							while event is not None:
+								self.insertIntoDatabase(event)
+								event = nodeToRemove.getNextEvent()
+			elif self.tree_type == 0:
 				# bidTree - Keep maximum prices
 				if price < self.getSmallestPrice():
 					# Add to database
 					self.insertIntoDatabase(details)
 				else:
-					# Add to tree, if hardlimit has not been reached
-					if self.sizeOfTree() < self.hardLimit:
-						updateToTree()
-					# Hard Limit has been reached, start pruning tree
-					else:
-						if price > self.getLargestPrice():
-							# Add this event to the node, but we move the bottom x events into the DB
-							updateToTree()
-							# Function call to add the bottom x number of events into the DB
-							for i in xrange(self.amtToPrune):
-								self.insertIntoDatabase(self.removeNode(self.getSmallestPrice()))
-						else:
-							# Add event to the DB
-							self.insertIntoDatabase(details)
+					# Add this event to the node, but we move the bottom x events into the DB if hard limit is reached
+					updateToTree()
+
+					if self.sizeOfTree() > self.hardLimit:	
+						# Hard Limit has been reached, start pruning tree
+						# Function call to add the bottom x number of events into the DB
+						for i in xrange(self.amtToPrune):
+							nodeToRemove = self.removeNode(self.getSmallestPrice())
+							event = nodeToRemove.getNextEvent()
+							while event is not None:
+								self.insertIntoDatabase(event)
+								event = nodeToRemove.getNextEvent()
+			else:
+				assert False, "Invalid type!"
 
 
 
@@ -280,7 +278,7 @@ class Tree():
 		# add event hash to the the event for faster indexing in the database
 		event.insert(0,self.__getEventHash(event))
 		# insert the event into the database
-		self.databaseQueue.put((event[5].lowercase(), event))
+		self.databaseQueue.put((event[5].lower(), event))
 		
 		return None
 
@@ -429,7 +427,8 @@ class Node():
 	def getSatisfiableOrders(self, sharesToMatch):
 		returnList = []
 		iter = self.orderQueue.itervalues()
-		while sharesToMatch > 0:
+		# print "Shares to match %d"%sharesToMatch
+		while int(sharesToMatch) > 0:
 			# Note that the event here is merely a pointer that points to the item in the dictionary, 
 			# so changing this value will change values in the dictionary as well
 			try:
@@ -437,19 +436,22 @@ class Node():
 			except StopIteration:
 				break
 			orderNumShares = int(event[3])
-			if orderNumShares < sharesToMatch:
+			if orderNumShares <= sharesToMatch:
 				sharesToMatch -= orderNumShares
-				event = self.orderQueue.popitem(last=False)
+				self.orderQueue.popitem(last=False)
 				returnList.append(event)
+				self.numShares -= event[3]
 			# Demand has been satisfied, update the value of the first item in the queue after satisfing demand
 			else:
 				# Update the value of the first item on the queue
 				newNumShares = orderNumShares-sharesToMatch
+				newEvent = copy.deepcopy(event)
 				event[3] = int(newNumShares)
-				returnList.append(event)
+				newEvent[3] = sharesToMatch
+				returnList.append(newEvent)
 				#NOTE: This might be a cause some issues as we are returning a pointer to event, which might cause event to inadvertently be editted...
 				sharesToMatch -= orderNumShares
-		
+				self.numShares -= newEvent[3]
 		return returnList
 
 
