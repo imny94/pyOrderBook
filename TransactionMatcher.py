@@ -1,6 +1,7 @@
 import time
 import threading
 import logging
+from datetime import datetime
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(levelname)s] (%(threadName)-10s) %(message)s',
@@ -58,7 +59,12 @@ class TransactionMatcher():
                 bidOrders = self.bidTree.getSatisfiableOrders(maxBidPrice, numBiddingShares)
 
                 #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
+            elif numAskingShares == numBiddingShares:
+                askNode = self.askTree.removeNode(minAskPrice)
+                bidNode = self.bidTree.removeNode(maxBidPrice)
 
+                askOrders = askNode.getOrderQueue().values()
+                bidOrders = bidNode.getOrderQueue().values()
             # There are some remaining shares that remains to be sold
             else:
                 # Remove the price node from the bidTree as all the orders in that node has been served
@@ -68,5 +74,43 @@ class TransactionMatcher():
                 # Get the list of orderIndex that can be satisfied
                 askOrders = self.askTree.getSatisfiableOrders(minAskPrice, numAskingShares)
 
-                #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
+            #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
+            #BidOrders and AskOrders are both lists of events
+            #need to start making transactions
             logging.debug("Successfully matched Transaction!")
+            #index of numShares: 3
+            while askOrders and bidOrders:
+                remainder = askOrders[0][3] - bidOrders[0][3]
+                if remainder > 0:
+                    #edit ask
+                    askOrders[0][3] = remainder
+
+                    #create AskEvent with updated numShares
+                    newAskEvent = askOrders[0]
+                    newAskEvent[3] = bidOrders[0][3]
+
+                    newBidEvent = bidOrders.pop(0)
+                if remainder < 0: #there are more bidOrders than askOrders
+                    #edit bid
+                    bidOrders[0][3] = 0 - remainder #makes the numShares positive
+
+                    newBidEvent = bidOrders[0]
+                    newBidEvent[3] = askOrders[0][3]
+
+                    newAskEvent = askOrders.pop(0)
+                else:
+                    newAskEvent = askOrders.pop(0)
+                    newBidEvent = bidOrders.pop(0)
+
+                newTransaction = self.createTransaction(newAskEvent, newBidEvent)
+                self.databaseQueue.put(("transactions",newTransaction))
+
+
+    def createTransaction(self, askEvent, bidEvent):
+        #index 0: userId
+        #index 2: price
+        #index 3: numShares
+        totalProfit = askEvent[3] * (bidEvent[2] - askEvent[2])
+        tradePrice  = bidEvent[2]
+        tradeEvent  = [askEvent[0], bidEvent[0], str(datetime.now()), tradePrice, askEvent[3], totalProfit, 2]
+        return tradeEvent
