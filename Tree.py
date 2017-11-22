@@ -158,6 +158,17 @@ class Tree():
 		self.volume -= int(node.numShares)
 		return node
 
+		# this is for display purpose
+		if self.tree_type==0: #bid tree
+			if price >= self.first10prices[0]:
+				if price in self.first10prices:
+					self.first10prices.remove(price)
+					self.first10prices.sort()
+		else:# ask tree
+			if price >= self.first10prices[-1]:
+				if price in self.first10prices:
+					self.first10prices.remove(price)
+					self.first10prices.sort()
 	'''
 	DESCRIPTION:
 		This function is used to remove orders from the given price node 
@@ -166,6 +177,8 @@ class Tree():
 	def removeOrderFromNode(self, price, event):
 		node = self.price_tree.get(price)
 		node.removeEvent(event)
+
+
 
 
 	'''
