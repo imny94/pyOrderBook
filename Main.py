@@ -5,6 +5,7 @@ from Display import display
 import Tree
 import EventList
 import TransactionMatcher
+import Database
 
 '''
 DESCRIPTION:
@@ -19,6 +20,10 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 		# e.g of row = (,0,0,1,2017/2/9,100,30)
 
 		AorB = row[-1]
+		temp = row[3]
+		row[3] = int(temp)
+		temp = row[2]
+		row[2] = float(temp)
 		if AorB.lower() == "ask":
 			askTree.add(row)
 		elif AorB.lower() == "bid":
@@ -44,9 +49,10 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 				print "hi"
 				update(firstRow)
 			else:
-				print "HAS HEADER!"
-				print firstRow
-				print csv.Sniffer().has_header(firstRow)
+				# print "HAS HEADER!"
+				# print firstRow
+				# print csv.Sniffer().has_header(firstRow)
+				pass
 			# Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
 			for row in reader:
 				update(row)
@@ -120,6 +126,10 @@ DESCRIPTION:
 def matchTransactions(askTree, bidTree, databaseQueue, terminateFlag, verbose = False):
 	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, databaseQueue, terminateFlag, verbose)
 	matcher.runMatches()
+
+def databaseThread(databaseQueue, terminateFlag, verbose):
+	db = Database.EventDatabase(databaseQueue, terminateFlag, verbose)
+	db.run()
 
 '''
 DESCRIPTION:
@@ -198,6 +208,8 @@ if __name__ == '__main__':
 		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, databaseQueue, terminateFlag, verbose, ))
+	# Define the thread that will run database slave
+	databaseThread = Thread(target=databaseThread, args=(databaseQueue, terminateFlag, verbose, ))
 
 	# Start the different threads
 	
@@ -205,6 +217,7 @@ if __name__ == '__main__':
 		displayThread.start()
 
 	matchingThread.start()
+	databaseThread.start()
 
 	# orderBookThread.start()
 
@@ -217,7 +230,7 @@ if __name__ == '__main__':
 			if terminateFlag.isSet():
 				terminateSequence(terminateFlag)
 				break
-			print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
+			# print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
 			newEvent = None
 			rawNewEvent = raw_input(">")
 			if rawNewEvent.lower() in ("stop","quit","exit"):
