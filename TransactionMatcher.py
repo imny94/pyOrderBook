@@ -27,7 +27,7 @@ class TransactionMatcher():
         If there is a match between the asking and bidding prices, the order book will try to match as many of the orders it can for that given price
     '''
     def runMatches(self):
-        logging.debug("Matching Transactions!")
+        self.debugLog("Matching Transactions!")
         while 1:
             if self.terminateFlag.isSet():
                 self.debugLog("Terminating Thread!")
@@ -56,7 +56,7 @@ class TransactionMatcher():
                 # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
                 askOrders = askNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
-                bidOrders = self.bidTree.getSatisfiableOrders(maxBidPrice, numBiddingShares)
+                bidOrders = self.bidTree.getSatisfiableOrders(maxBidPrice, numAskingShares)
 
                 #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
             elif numAskingShares == numBiddingShares:
@@ -72,22 +72,22 @@ class TransactionMatcher():
                 # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
                 bidOrders = bidNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
-                askOrders = self.askTree.getSatisfiableOrders(minAskPrice, numAskingShares)
+                askOrders = self.askTree.getSatisfiableOrders(minAskPrice, numBiddingShares)
 
             #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
             #BidOrders and AskOrders are both lists of events
             #need to start making transactions
-            logging.debug("Successfully matched Transaction!")
+            self.debugLog("Successfully matched Transaction!")
             #index of numShares: 3
             while askOrders and bidOrders:
-                remainder = askOrders[0][3] - bidOrders[0][3]
+                remainder = float(askOrders[0][3]) - float(bidOrders[0][3])
                 if remainder > 0:
                     #edit ask
                     askOrders[0][3] = remainder
 
                     #create AskEvent with updated numShares
                     newAskEvent = askOrders[0]
-                    newAskEvent[3] = bidOrders[0][3]
+                    newAskEvent[3] = float(bidOrders[0][3])
 
                     newBidEvent = bidOrders.pop(0)
                 if remainder < 0: #there are more bidOrders than askOrders
@@ -95,7 +95,7 @@ class TransactionMatcher():
                     bidOrders[0][3] = 0 - remainder #makes the numShares positive
 
                     newBidEvent = bidOrders[0]
-                    newBidEvent[3] = askOrders[0][3]
+                    newBidEvent[3] = float(askOrders[0][3])
 
                     newAskEvent = askOrders.pop(0)
                 else:
@@ -110,7 +110,7 @@ class TransactionMatcher():
         #index 0: userId
         #index 2: price
         #index 3: numShares
-        totalProfit = askEvent[3] * (bidEvent[2] - askEvent[2])
-        tradePrice  = bidEvent[2]
+        totalProfit = int(askEvent[3]) * (float(bidEvent[2]) - float(askEvent[2]))
+        tradePrice  = float(bidEvent[2])
         tradeEvent  = [askEvent[0], bidEvent[0], str(datetime.now()), tradePrice, askEvent[3], totalProfit, 2]
         return tradeEvent
