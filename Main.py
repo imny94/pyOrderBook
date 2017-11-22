@@ -1,4 +1,4 @@
-import sys, getopt, csv, time
+import sys, getopt, csv, time, threading
 from threading import Thread
 
 from Display import display
@@ -8,24 +8,49 @@ import TransactionMatcher
 
 '''
 DESCRIPTION:
-	This function will be used to update the relevant trees and event list from csv row read in
+	This function will be used to update the relevant trees from csv row read in
 
-	Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
+	Row should be in format [UserID, Time, Price, NumShares, Type]
 '''
-def updateTreesAndEventList(askTree, bidTree, eventList, row):
-	print row
-	print "UpdateTrees and EventList"
-	# Add the given events into the eventlist
-	detailsForNode = eventList.add(EventList.Event(row[1:]))
-	# e.g of detailsForNode = (,0,0,1,2017/2/9,100,30)
+def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutput = False, newEvent = None):
+	
+	####################Nested Function####################################################
+	def update(row):
+		# e.g of row = (,0,0,1,2017/2/9,100,30)
 
-	AorB = row[0]
-	if AorB == "Ask":
-		askTree.add(detailsForNode)
-	elif AorB == "Bid":
-		bidTree.add(detailsForNode)
-	else:
-		assert False, "Invalid command: %s given!"%row
+		AorB = row[-1]
+		if AorB.lower() == "ask":
+			askTree.add(row)
+		elif AorB.lower() == "bid":
+			bidTree.add(row)
+		else:
+			assert False, "Invalid command: %s given!"%row
+	################End of Nested Function ##########################################################
+
+	# Update the newEvent
+	if newEvent != None:
+		return update(newEvent)
+
+	if saveOutput:
+		if outputFile == None:
+			assert False, "No output file specified!"
+
+	if inputFile != None:
+		# Read in the csv file
+		with open(inputFile, "rb") as csvfile:
+			reader = csv.reader(csvfile, delimiter=",")
+			firstRow = csvfile.readline()
+			if not csv.Sniffer().has_header(firstRow):
+				print "hi"
+				update(firstRow)
+			else:
+				print "HAS HEADER!"
+				print firstRow
+				print csv.Sniffer().has_header(firstRow)
+			# Row should be in format [Idx(for Testing), userID, Ask/Bid, Add/Cancel, timestamp, #Shares, price]
+			for row in reader:
+				update(row)
+	
 
 '''
 DESCRIPTION:
@@ -92,8 +117,8 @@ DESCRIPTION:
 	It will create an instance of TransactionMatcher and runMatches
 	
 '''
-def matchTransactions(askTree, bidTree, eventList, numThreads):
-	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, numThreads)
+def matchTransactions(askTree, bidTree, eventList, terminateFlag, verbose = False):
+	matcher = TransactionMatcher.TransactionMatcher(askTree, bidTree, eventList, terminateFlag, verbose)
 	matcher.runMatches()
 
 '''
@@ -102,6 +127,12 @@ DESCRIPTION:
 '''
 def usage():
 	print "****************USAGE*****************\nArguments are passed to this program via a flag and argument, and settings are set by toggling the flags available.\n\nThis program supports the following flags:\n	-h/--help\n 	-i/--input\n	-o/--output"
+
+def terminateSequence(terminateFlag=None):
+	print "Terminating Program ... Killing all threads"
+	if terminateFlag is not None:
+		terminateFlag.set()
+
 
 '''
 DESCRIPTION:
@@ -127,11 +158,13 @@ if __name__ == '__main__':
 	inputFile = None
 	outputFile = None
 	saveOutput = False
+	showDisplay = False
+	verbose = False
 
 	argv = sys.argv[1:]
 	try:
 		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
-		opts, args = getopt.getopt(argv, "hi:os", ["help", "input=", "output=", "saveOutput"] )
+		opts, args = getopt.getopt(argv, "hi:o:sdv", ["help", "inputFile=", "outputFile=", "saveOutput", "display","verbose"] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
@@ -141,27 +174,60 @@ if __name__ == '__main__':
 		if opt in ("-h", "--help"):
 			usage()
 			sys.exit()
-		elif opt in ("-i", "--input"):
+		elif opt in ("-i", "--inputFile"):
 			inputFile = arg
-		elif opt in ("-o", "--output"):
+		elif opt in ("-o", "--outputFile"):
 			outputFile = arg
 		elif opt in ("-s", "--saveOutput"):
 			saveOutput = True
+		elif opt in ("-d", "--display"):
+			showDisplay = True
+		elif opt in ("-v", "--verbose"):
+			verbose = True
 		else:
 			print "This should not happen!"
 			assert False, "unhandled option"
 
-	numThreads = 2
+	# Complete populating relevant information from csv file
+	updateTrees(askTree, bidTree, inputFile, outputFile, saveOutput)
+
+	terminateFlag = threading.Event()
 	# Define the thread that will display UI
-	# displayThread = Thread(target = display, args=(askTree, bidTree, eventList, numThreads, ))
-	# Define the thread that will maintain order book
-	orderBookThread = Thread(target=orderBook, args=(askTree, bidTree, eventList, inputFile, numThreads, outputFile, saveOutput, ))
+	if showDisplay:
+		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
 	# Define the thread that will match up orders
-	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, numThreads, ))
+	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, eventList, terminateFlag, verbose, ))
 
 	# Start the different threads
-	# displayThread.start()
-	orderBookThread.start()
-	# matchingThread.start()
+	
+	if showDisplay:
+		displayThread.start()
 
-	print "Completed running all threads"
+	matchingThread.start()
+
+	# orderBookThread.start()
+
+	# Define some constants to do error checking with the user input for new events
+	numAttributes = 5
+
+	# Read in user inputs to add/cancel ask/bid orders
+	try:
+		while 1:
+			if terminateFlag.isSet():
+				terminateSequence(terminateFlag)
+				break
+			print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
+			newEvent = None
+			rawNewEvent = raw_input(">")
+			if rawNewEvent.lower() in ("stop","quit","exit"):
+				terminateSequence(terminateFlag)
+				break
+			newEvent = [i.strip() for i in rawNewEvent.split(",")]
+			# Data filtering to makes sure that the new input is in the right format
+			if len(newEvent) != numAttributes:
+				print "Wrong Format!"
+				continue
+			updateTrees(askTree, bidTree, newEvent=newEvent)
+
+	except KeyboardInterrupt as identifier:
+		terminateSequence(terminateFlag)

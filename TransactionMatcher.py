@@ -1,13 +1,23 @@
 import time
 import threading
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='[%(levelname)s] (%(threadName)-10s) %(message)s',
+                    )
 
 class TransactionMatcher():
 
-    def __init__(self, askTree, bidTree, eventList, numThreads):
+    def __init__(self, askTree, bidTree, eventList, terminateFlag, verbose):
         self.askTree = askTree
         self.bidTree = bidTree
         self.eventList = eventList
-        self.numThreads = numThreads
+        self.terminateFlag = terminateFlag
+        self.verbose = verbose
+
+    def debugLog(self,msg):
+        if self.verbose:
+            logging.debug(msg)
 
     '''
     DESCRIPTION:
@@ -16,16 +26,17 @@ class TransactionMatcher():
         If there is a match between the asking and bidding prices, the order book will try to match as many of the orders it can for that given price
     '''
     def runMatches(self):
-        print "Matching Transactions!"
+        logging.debug("Matching Transactions!")
         while 1:
-            if threading.active_count() < self.numThreads:
-                print "An Error has occured on another Thread! Terminating current Transaction Matcher thread!"
+            if self.terminateFlag.isSet():
+                self.debugLog("Terminating Thread!")
                 break
             minAskPrice = self.askTree.getSmallestPrice()
             maxBidPrice = self.bidTree.getLargestPrice()
+            # logging.debug("minAskPrice: %s , maxBidPrice: %s"%(minAskPrice,maxBidPrice))
 
-            if minAskPrice or maxBidPrice is None:
-                print "Either the ask tree or bid tree is empty! Waiting for tree to be populated"
+            if minAskPrice is None or maxBidPrice is None:
+                self.debugLog("Either the ask tree or bid tree is empty! Waiting for tree to be populated")
                 time.sleep(1)
                 continue
             
@@ -38,35 +49,24 @@ class TransactionMatcher():
             numBiddingShares = self.bidTree.getNumSharesForPrice(maxBidPrice)
 
             # Everything can be sold
-            if numAskingShares > numBiddingShares:
+            if numAskingShares < numBiddingShares:
                 # Remove the price node from the askTree as all the orders in that node has been served
-                askNode = self.askTree.remove(minAskPrice)
-                # Get the order Queue in terms of the orderIndex only. Note that the orderQueue is a list of Sets, so that data is filtered here
-                askOrders = [i[0] for i in askNode.getOrderQueue()]
+                askNode = self.askTree.removeNode(minAskPrice)
+                # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
+                askOrders = askNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
                 bidOrders = self.bidTree.getSatisfiableOrders(maxBidPrice, numBiddingShares)
-                # Note that the last item in bidOrders is a set that contains the order index to update
-                indexToUpdate, newNumShares = bidOrders.pop(-1)
 
-                # # Update the eventlist
-                # currentTime = time.time()
-                # self.eventList.successTrades(askOrders, minAskPrice, currentTime)
-                # self.eventList.successTrades(bidOrders, maxBidPrice, currentTime)
-                # self.eventList.tradeAmount(indexToUpdate, maxBidPrice, currentTime, newNumShares)
+                #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
 
             # There are some remaining shares that remains to be sold
             else:
                 # Remove the price node from the bidTree as all the orders in that node has been served
-                bidNode = self.bidTree.remove(maxBidPrice)
-                # Get the order Queue in terms of the orderIndex only. Note that the orderQueue is a list of Sets, so that data is filtered here
-                bidOrders = [i[0] for i in bidNode.getOrderQueue()]
+                bidNode = self.bidTree.removeNode(maxBidPrice)
+                # Get the order Queue in terms of the orderIndex only. Order queue is a sortedDictionary of events
+                bidOrders = bidNode.getOrderQueue().values()
                 # Get the list of orderIndex that can be satisfied
                 askOrders = self.askTree.getSatisfiableOrders(minAskPrice, numAskingShares)
-                # Note that the last item in bidOrders is a set that contains the order index to update
-                indexToUpdate, newNumShares = askOrders.pop(-1)
 
-                # # Update the eventlist
-                # currentTime = time.time()
-                # self.eventList.successTrades(askOrders, minAskPrice, currentTime)
-                # self.eventList.successTrades(bidOrders, maxBidPrice, currentTime)
-                # self.eventList.tradeAmount(indexToUpdate, minAskPrice, currentTime, newNumShares)
+                #TODO: Need to update transaction matcher to continue with logic after a transaction has been matched!
+            logging.debug("Successfully matched Transaction!")
