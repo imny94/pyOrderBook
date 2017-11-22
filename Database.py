@@ -12,7 +12,7 @@ class DataBase():
     DESCRIPTION:
         creates new table if it exists
         transaction: stores transactions with following columns:
-            txID: transaction ID
+            EventID: transaction ID
             User1ID: user1
             User2ID: user2
             EventTime: time of transaction
@@ -27,7 +27,7 @@ class DataBase():
         if TableName == "transactions":
             sql_command = """
             CREATE TABLE IF NOT EXISTS %s ( 
-            TxID INTEGER, 
+            EventID INTEGER, 
             User1ID VARCHAR(20), 
             User2ID VARCHAR(20), 
             EventTime DATETIME, 
@@ -38,6 +38,7 @@ class DataBase():
         elif TableName == "bid" or TableName == "ask":
             sql_command = """
             CREATE TABLE IF NOT EXISTS %s (  
+            EventID VARCHAR(255),
             UserID VARCHAR(20), 
             EventTime DATETIME, 
             Price NUMERIC(10,4),
@@ -71,23 +72,35 @@ class DataBase():
     def InsertData(self,TableName,Data):
 
         TableName = TableName.lower()
-        #if data has 5 arguments, its a Ask/Bid Data
-        if len(Data) == 5:
+        #if data has 6 arguments, its a Ask/Bid Data
+        if len(Data) == 6:
             #Insert Ask/Bid Data into the table
-            insert_command = """INSERT INTO {0} (UserID, EventTime, Price, NumShares, EventType)
-            VALUES ('{1}','{2}',{3},{4},{5});""".format(TableName,Data[0],Data[1],Data[2],Data[3],Data[4])
+            #insert_command = """INSERT INTO {0} (EventID, UserID, EventTime, Price, NumShares, EventType)
+            #VALUES ('{1}','{2}',{3},{4},{5},{6});""".format(TableName,Data[0],Data[1],Data[2],Data[3],Data[4],Data[5])
+            insert_command = """INSERT INTO %s (EventID, UserID, EventTime, Price, NumShares, EventType)
+            VALUES (?,?,?,?,?,?);"""%TableName
+
             #UserID & Time data requires addition quote for formatting
-            #self.cursor.execute(insert_command)
+            self.cursor.execute(insert_command, (Data[0],Data[1],Data[2],Data[3],Data[4],Data[5]))
         #else data must have 7 arguments, its a transaction Data
         else:
             #insert transaction data into the table
-            insert_command = """INSERT INTO %s (TxID, User1ID, User2ID, EventTime, Price, NumShares, EventType)
-            VALUES (%s,'%s','%s','%s',%s,%s,%s);"""%(TableName,Data[0],Data[1],Data[2],Data[3],Data[4],Data[5],Data[6]) 
+            insert_command = """INSERT INTO %s (EventID, User1ID, User2ID, EventTime, Price, NumShares, EventType)
+            VALUES (?,?,?,?,?,?,?);"""%TableName
             #User1ID/User2ID & Time data requires addition quote for formatting
-        
-        self.cursor.execute(insert_command)
+            self.cursor.execute(insert_command, (Data[0],Data[1],Data[2],Data[3],Data[4],Data[5],Data[6]))
         self.connection.commit()
 
+    def RemoveEntry(self, TableName, entryID):
+        TableName = TableName.lower()
+        self.cursor.execute("SELECT * FROM %s WHERE EventID=?"%TableName,(entryID,))
+        data = self.cursor.fetchone()
+        if data is None:
+            print('There is no event with eventID %s'%entryID)
+            return
+        else:
+            self.cursor.execute("DELETE FROM %s WHERE EventID=?"%TableName,(entryID,))
+            return list(data)
 
     '''
     DESCRIPTION:
@@ -174,28 +187,44 @@ class DataBase():
 #Test cases
 def main():
     database = DataBase("")
-    database.NewTable("transactions")
-    # database.RemoveTable("transaction")
 
-    # database.InsertData("ask",("1", "1111-11-11 11:11.11.254","89", "1", "2"))
-    # database.InsertData("ask",("1", "1111-11-11 11:11.11.574","100", "1", "2"))
-    # database.InsertData("ask",("1", "1111-11-11 11:11.11.124","77", "1", "2"))
-    # database.InsertData("ask",("1", "1111-11-11 11:11.11.125","90", "1", "2"))
-    # database.InsertData("ask",("1", "1111-11-11 11:11.11.344","67", "1", "2"))
-    # database.FetchData("ask")
+    ###
+    #Test ask/bid
+    ###
 
-    database.InsertData("transactions",("1", "Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "2"))
-    database.InsertData("transactions",("1", "Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "2"))
-    database.InsertData("transactions",("1", "Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "2"))
-    database.InsertData("transactions",("1", "Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "2"))
-    database.InsertData("transactions",("1", "Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "2"))
-    database.FetchKEntries("transactions")
-    database.GetPrices("transactions")
-    database.Get10Entries("transactions")
-    database.CloseConnection()
-    database.RemoveTable("transactions")
+    # database.NewTable("ask")
+    # database.InsertData("ask",("abc123", "Alice", "1111-11-11 11:11.11.254","89", "1", "2"))
+    # database.InsertData("ask",("aab123", "Bob", "1111-11-11 11:11.11.574","100", "1", "2"))
+    # database.InsertData("ask",("aaa123", "Cat", "1111-11-11 11:11.11.124","77", "1", "2"))
+    # database.InsertData("ask",("abcd123", "Joe", "1111-11-11 11:11.11.125","90", "1", "2"))
+    # database.InsertData("ask",("a123", "Zoe", "1111-11-11 11:11.11.344","67", "1", "2"))
+    # mydata = database.RemoveEntry("ask","abc123")
+    # print mydata
+    # database.FetchKEntries("ask")
+    # database.RemoveTable("ask")
 
+
+
+    ###
+    #Test transactions
+    ###
+
+    # database.NewTable("transactions")
+    # database.InsertData("transactions",("1", "Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "2"))
+    # database.InsertData("transactions",("2", "Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "2"))
+    # database.InsertData("transactions",("3", "Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "2"))
+    # database.InsertData("transactions",("4", "Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "2"))
+    # database.InsertData("transactions",("5", "Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "2"))
+    # # database.FetchKEntries("transactions")
+    # # database.GetPrices("transactions")
+    # # database.Get10Entries("transactions")
+    # mydata = database.RemoveEntry("transactions", "1")
+    # print mydata
+    # database.FetchKEntries("transactions")
+    # database.CloseConnection()
+    # database.RemoveTable("transactions")
 
 if __name__ == '__main__':
 	main()
+
 '''
