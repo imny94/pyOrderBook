@@ -1,6 +1,6 @@
 # NTU-BitCoin
 
-xxx is a fast order book implementation of Cryptocurrency like Bitcoin or Etherium. It uses a fast tree implementation to match transactions and DB to store records.
+EtherMax is a fast order book implementation of Cryptocurrency like Bitcoin or Etherium. It uses a fast tree implementation to match transactions and DB to store records.
 It also shows user a user-friendly user interface to display the current market price and order books. 
 
 ## Setup/Installation
