@@ -2,13 +2,25 @@ import numpy as np
 import sqlite3
 
 
-
 class EventDatabase():
 
-    def __init__(self):
+    def __init__(self, databaseQueue):
         self.connection = sqlite3.connect("Events.db")
         self.connection.text_factory = str #converting SQL output from Unicode to Bytestring
         self.cursor = self.connection.cursor()
+        self.databaseQueue = databaseQueue
+
+        self.NewTable("transactions")
+        self.NewTable("ask")
+        self.NewTable("bid")
+
+    def __queryQueue(self):
+        newEntry = self.databaseQueue.get()
+        self.InsertData(newEntry[0], newEntry[1])
+
+    def run(self):
+        while 1:
+            self.__queryQueue()
 
     '''
     DESCRIPTION:
