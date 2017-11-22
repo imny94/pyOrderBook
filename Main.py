@@ -230,7 +230,7 @@ if __name__ == '__main__':
 			if terminateFlag.isSet():
 				terminateSequence(terminateFlag)
 				break
-			# print "Enter new event in format 'UserID,Time,Price,NumShares,Type'"
+			print "Enter new event in format 'UserID,Time,Price,NumShares,Type' comma-delimited"
 			newEvent = None
 			rawNewEvent = raw_input(">")
 			if rawNewEvent.lower() in ("stop","quit","exit"):
