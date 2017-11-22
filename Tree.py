@@ -1,6 +1,7 @@
 from bintrees import FastRBTree
 import Queue
 import numpy as np
+import Database
 
 class Tree():
 
@@ -245,6 +246,19 @@ class Tree():
 	def getSatisfiableOrders(self, price, numShares):
 		node = self.lookup(price)
 		return node.getSatisfiableOrders(numShares)
+	
+	'''
+	DESCRIPTION:
+		This function is used to save the event into the Database
+
+	ARGUMENTS:
+		event - [EventID, UserID, Time, Price, NumShares, Type]
+	'''
+	def DatabaseInsert(self, event):
+		#call for class and function
+		Database.InsertData(event[5].lowercase(), event)
+		
+		return None
 
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
