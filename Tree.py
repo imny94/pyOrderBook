@@ -1,7 +1,6 @@
 from bintrees import FastRBTree
 import Queue
 import numpy as np
-import Database
 
 class Tree():
 
@@ -18,7 +17,7 @@ class Tree():
 						   1 for ask tree.
 
 	'''
-	def __init__(self,type_of_tree):
+	def __init__(self,type_of_tree, database):
 		self.price_tree = FastRBTree()
 		self.volume = 0
 		self.min_price = None
@@ -26,6 +25,8 @@ class Tree():
 		self.maxNumNodes = 100000
 		# Allow for 20% deviation
 		self.hardLimit = self.maxNumNodes * 1.2
+		self.database = database
+		self.amtToPrune = 10
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
 
@@ -92,23 +93,44 @@ class Tree():
 			# 0 - bidTree, 1 - askTree
 			if self.tree_type:
 				# askTree - Keep minimum prices
-				if price < self.getSmallestPrice():
+				if price > self.getLargestPrice():
 					# Add to database
-					#TODO: Function call to add to DB
-					pass
+					self.insertToDatabase(details)
 				else:
 					# Add to tree, if hardlimit has not been reached
 					if self.sizeOfTree() < self.hardLimit:
 						updateToTree()
 					# Hard Limit has been reached, start pruning tree
 					else:
-						if price > self.getSmallestPrice():
+						if price < self.getSmallestPrice():
 							# Add this event to the node, but we move the bottom x events into the DB
 							updateToTree()
-							#TODO: Function call to add the bottom x number of events into the DB
+							# Function call to add the bottom x number of events into the DB
+							for i in xrange(self.amtToPrune):
+								self.insertToDatabase(self.removeNode(self.getLargestPrice()))
 						else:
 							# Add event to the DB
-							#TODO: Function call to add the event into the DB
+							self.insertToDatabase(details)
+			else:
+				# bidTree - Keep maximum prices
+				if price < self.getSmallestPrice():
+					# Add to database
+					self.insertToDatabase(details)
+				else:
+					# Add to tree, if hardlimit has not been reached
+					if self.sizeOfTree() < self.hardLimit:
+						updateToTree()
+					# Hard Limit has been reached, start pruning tree
+					else:
+						if price > self.getLargestPrice():
+							# Add this event to the node, but we move the bottom x events into the DB
+							updateToTree()
+							# Function call to add the bottom x number of events into the DB
+							for i in xrange(self.amtToPrune):
+								self.insertToDatabase(self.removeNode(self.getSmallestPrice()))
+						else:
+							# Add event to the DB
+							self.insertToDatabase(details)
 
 
 
@@ -254,11 +276,22 @@ class Tree():
 	ARGUMENTS:
 		event - [EventID, UserID, Time, Price, NumShares, Type]
 	'''
-	def DatabaseInsert(self, event):
-		#call for class and function
-		Database.InsertData(event[5].lowercase(), event)
+	def insertToDatabase(self, event):
+		# add event hash to the the event for faster indexing in the database
+		event.insert(0,self.__getEventHash(event))
+		# insert the event into the database
+		self.database.InsertData(event[5].lowercase(), event)
 		
 		return None
+
+	'''
+	DESCRIPTION:
+		This function is used to return a MD5 hash of a given event so it can be added to the queue/ be looked up quickly
+	'''
+	def __getEventHash(self, event):
+		m = hashlib.md5()
+		m.update(str(event))
+		return m.digest()
 
 	#--------------------These member functions are for display purposes------------------
 	def fastDisplay(self):
