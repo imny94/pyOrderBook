@@ -2,6 +2,7 @@ import Tkinter as tk # capital letter for 2.7 lower letter for 3.5+
 from PIL import Image, ImageTk
 import numpy as np
 import time
+from Database import EventDatabase as DB
 '''
 important!!!!!!!!!! 
 when display from the transactions records.
@@ -10,7 +11,7 @@ when calling the function the given name is "transactions".
 so if create a table with different names, please change it!!!
 '''
 
-def display(askTree, bidTree, trades, terminateFlag):
+def display(askTree, bidTree, terminateFlag):
 	'''
 	run the display
 	Input:
@@ -19,6 +20,10 @@ def display(askTree, bidTree, trades, terminateFlag):
 	Display: 
 		UI 
 	'''
+	#import database from DB
+	trades=DB()
+
+
 	#UI Framework
 	UI = tk.Tk()
 	APP(UI)
@@ -51,11 +56,11 @@ class APP(tk.Frame):
 		self.book.configure(background='black')
 		# -----------entries in the book:--------
 		# icon
-		global icon
-		icon = Image.open("ether.png")
-		icon = ImageTk.PhotoImage(icon)
-		ether=tk.Label(self.book,image=icon,bg='black')
-		ether.place(x=120,y=20)
+		# global icon
+		# icon = Image.open("ether.png")
+		# icon = ImageTk.PhotoImage(icon)
+		# ether=tk.Label(self.book,image=icon,bg='black')
+		# ether.place(x=120,y=20)
 
 		#----market prices---
 		# market price.
@@ -78,7 +83,6 @@ class APP(tk.Frame):
 		self.__content_name(["COUNT","AMOUNT","TOTAL","PRICE"],0)
 		self.__content_name(["PRICE","TOTAL","AMOUNT","COUNT"],400)
 		self.__content_name(["TIME","PRICE","AMOUNT"],800)
-
 		#---------------useful buttons----------
 
 
@@ -104,9 +108,7 @@ class APP(tk.Frame):
 		self.__updateBook()
 		self.__updateRecords()
 		# update prices
-		self.__showMaxMin()
 		self.__updatePrices()
-		return 0
 
 	def testUpdate(self,asks,bids,trades): # this is for test only!
 		'''
@@ -166,7 +168,7 @@ class APP(tk.Frame):
 		idx=0
 		for content in contents:
 			num=tk.Label(self.book,text=str(content),fg='gray',bg='black')
-			num.config(font=("Helvetica",16))
+			num.config(font=("Helvetica",14))
 			num.place(x=x_start+idx*100,y=y_start,width=100,height=40)
 			idx+=1
 

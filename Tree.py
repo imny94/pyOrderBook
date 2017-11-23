@@ -68,7 +68,7 @@ class Tree():
 				self.first10prices.append(price)
 				self.first10prices.sort()
 			# add price if in top 10 range
-			if self.tree_type==0: #bid tree
+			if self.tree_type == 0: #bid tree
 				if price >= self.first10prices[0]:
 					if price not in self.first10prices:
 						self.first10prices.pop[0]
@@ -156,6 +156,19 @@ class Tree():
 	def removeNode(self, price):
 		node = self.price_tree.pop(price)
 		self.volume -= int(node.numShares)
+		# -------------------this is used for display---------------
+		# this is for display purpose
+		if self.tree_type==0: #bid tree
+			if price >= self.first10prices[0]:
+				if price in self.first10prices:
+					self.first10prices.remove(price)
+					self.first10prices.sort()
+		else:# ask tree
+			if price >= self.first10prices[-1]:
+				if price in self.first10prices:
+					self.first10prices.remove(price)
+					self.first10prices.sort()
+
 		return node
 
 	'''
@@ -319,7 +332,7 @@ class Tree():
 				count=node.getNumOrders()
 				amount=node.getShares()
 				total+=amount
-				display[idx]=np.array(([price,toal,amount,count]))
+				display[idx]=np.array(([price,total,amount,count]))
 				idx+=1
 		return display
 
