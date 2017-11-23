@@ -10,7 +10,7 @@ when calling the function the given name is "transactions".
 so if create a table with different names, please change it!!!
 '''
 
-def display(askTree, bidTree, trades):
+def display(askTree, bidTree, trades, terminateFlag):
 	'''
 	run the display
 	Input:
@@ -306,7 +306,9 @@ def UnitTest(): # this is for test only!
 	trades=test("tests/trades.csv")
 	display(asks,bids,trades)
 
-#UnitTest() # this is used for test only
+if __name__ == "__main__":
+	# this is used for test only
+	UnitTest()
 
 
 
