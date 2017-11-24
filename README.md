@@ -69,6 +69,6 @@ Angela Yung [T06902101] - University of California, Santa Barbara
 
 Yifan Li [T06901110] - Jilin University (吉林大学）
 
-Deniz Sen [T06303125] - Team Germany
+Deniz Sen [T06303125] - Leiden university
 
 Yao-Cheng Zhang [B04902047] - National Taiwan University (国立台湾大学）
