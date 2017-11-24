@@ -28,6 +28,10 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 			askTree.add(row)
 		elif AorB.lower() == "bid":
 			bidTree.add(row)
+		elif AorB.lower() == "cask":
+			askTree.removeOrderFromNode(row[2], row)
+		elif AorB.lower() == "cbid":
+			bidTree.removeOrderFromNode(row[2],row)
 		else:
 			assert False, "Invalid command: %s given!"%row
 	################End of Nested Function ##########################################################
@@ -163,7 +167,7 @@ if __name__ == '__main__':
 	databaseQueue = multiprocessing.Queue(maxsize=0)
 	askTree = Tree.Tree(1, databaseQueue)
 	bidTree = Tree.Tree(0, databaseQueue)
-	eventList = EventList.EventList()
+	# eventList = EventList.EventList()
 
 	# Read in input from the command line
 	inputFile = None
@@ -205,7 +209,7 @@ if __name__ == '__main__':
 	terminateFlag = threading.Event()
 	# Define the thread that will display UI
 	if showDisplay:
-		displayThread = Thread(target = display, args=(askTree, bidTree, eventList, terminateFlag))
+		displayThread = Thread(target = display, args=(askTree, bidTree, terminateFlag))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, databaseQueue, terminateFlag, verbose, ))
 	# Define the thread that will run database slave
