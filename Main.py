@@ -190,12 +190,6 @@ DESCRIPTION:
 	It will start the thread that will scan the trees for any match up in orders
 '''
 if __name__ == '__main__':
-	
-	# Initialising variables
-	databaseQueue = multiprocessing.Queue(maxsize=0)
-	askTree = Tree.Tree(1, databaseQueue)
-	bidTree = Tree.Tree(0, databaseQueue)
-	# eventList = EventList.EventList()
 
 	# Read in input from the command line
 	inputFile = None
@@ -203,11 +197,12 @@ if __name__ == '__main__':
 	saveOutput = False
 	showDisplay = False
 	verbose = False
+	maxTreeSize = None
 
 	argv = sys.argv[1:]
 	try:
 		# opts is a list of arguments e.g. (("-h"), ("-i","test.csv) , ("--output",))
-		opts, args = getopt.getopt(argv, "hi:o:sdv", ["help", "inputFile=", "outputFile=", "saveOutput", "display","verbose"] )
+		opts, args = getopt.getopt(argv, "hi:o:sdvm:", ["help", "inputFile=", "outputFile=", "saveOutput", "display", "verbose", "maxSize="] )
 	except getopt.GetoptError as e:
 		print str(e)
 		usage()
@@ -227,9 +222,16 @@ if __name__ == '__main__':
 			showDisplay = True
 		elif opt in ("-v", "--verbose"):
 			verbose = True
+		elif opt in ("-m", "--maxSize"):
+			maxTreeSize = arg
 		else:
 			print "This should not happen!"
 			assert False, "unhandled option"
+
+	# Initialising variables
+	databaseQueue = multiprocessing.Queue(maxsize=0)
+	askTree = Tree.Tree(1, databaseQueue, maxTreeSize)
+	bidTree = Tree.Tree(0, databaseQueue, maxTreeSize)
 
 	# Complete populating relevant information from csv file
 	updateTrees(askTree, bidTree, inputFile, outputFile, saveOutput)

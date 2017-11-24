@@ -17,17 +17,17 @@ class Tree():
 						   1 for ask tree.
 
 	'''
-	def __init__(self,type_of_tree, databaseQueue):
+	def __init__(self,type_of_tree, databaseQueue, maxTreeSize = 100000):
 		self.price_tree = FastRBTree()
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
-		self.maxNumNodes = 20#100000
+		self.maxNumNodes = int(maxTreeSize) if maxTreeSize is not None else 100000
 		# Allow for 20% deviation
-		self.hardLimit = self.maxNumNodes * 1.2
+		self.hardLimit = int(self.maxNumNodes * 1.2)
 		self.databaseQueue = databaseQueue
 		self.amtToPrune = 2
-		self.minSizeOfTree = 3
+		self.minSizeOfTree = int(self.maxNumNodes*0.2) if self.maxNumNodes*0.2 > 0 else 1
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
 
