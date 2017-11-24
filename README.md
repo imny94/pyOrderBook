@@ -1,7 +1,8 @@
-# NTU-BitCoin
+# NTU-BitCoin Team 9
 
-EtherMax is a fast order book implementation of Cryptocurrency like Bitcoin or Etherium. It uses a fast tree implementation to match transactions and DB to store records.
-It also shows user a user-friendly user interface to display the current market price and order books. 
+This is an implementation of a fast order book that can be used on exchanges for Cryptocurrency such as Bitcoin, Etherium, Bitcoin Cash, etc. 
+It uses a depth-limited red-black tree for storage of events in memory, allowing fast matching of transactions and lookups within the Tree. For instances where the number of events becomes too great to be stored entirely in memory, the least relevant events are stored in a SQLite Database, allowing the program to handle large number of transactions without impacting the performance of the order book too drastically.
+This program includes a user interface to display the current market price and order books. 
 
 ## Setup/Installation
 
@@ -20,48 +21,37 @@ python setup.py
 ```
 
 If failed, please manually install all the packages based on your running platform.
-#### run the program
+#### How to run the program
 
-we provide two options for user to run our program:
-
-###### run from a csv file
-
-You can choose one historical data from our tests folder and run it with the following command.
-
+This program can be run from the command line with the following command:
+```
+python Main.py
 ```
 
-```
+Additionally, this program takes in the following flags and arguments:
 
-###### run from internal prompt
-You can run the following command to run the program.
+ Flag | Full Flag | Arguments 
+ ---- | :-------: | --------: 
+ -i   | --input   | nameOfCSVFile
+ -v   | --verbose |           
+ -d   | --display |           
+ 
+ Use the input -i flag to pre-load transactions for the program from a csv file.
+ Use the verbose -v flag to show messages from background threads.
+ Use the -d display flag to show a display for the order book.
+ 
+ E.g.
+ ```
+ python Main.py -i test.csv -v -d
+ ```
 
-```
+#### Dynamic addition of transactions to the program
 
-```
+When the program is running, transactions can be passed to the program dynamically through the command line.
+Enter the new transaction into the command line in the following format:
+<UserID>,<Time>,<Price>,<Number of Shares>,<Type>
+NOTE: <Type> only accepts the following 4 types : "ask", "bid", "cask", "cbid"
+where "cask" and "cbid" represents cancel events for ask and bid events
 
-And when you are in the program, we support several commands for you to use.
-
-
-
-## Standard to follow when writing your part:
-
-
-### 1.  open your own branch! 
-	don't manipulate with the master branch!
-	if you are going to merge it, explain your implementation to others
-	and if they get your idea and don't have any other disagreement. 
-	Then, it is safe to merge and don't forget to let others know.
-
-
-### 2.  write down your progress!
-	This is our current progress trello group :
-	https://trello.com/invite/b/CcvQef6G/10ddd6da30833b1a0cd0a05c97f0fdef/bitcoin
-
-	Everyone should write down 
-	what you are currenntly implementing and how is your current progress.
-	It is very important for others to catch on !!!!!!!!
-
-
-### 3.  If you are going to catch up other one's part, talk to them first !!
-	don't redo work! talk to them and know their current status!
-
+E.g.
+6542316, 3244657, 500.00, 50, ask
