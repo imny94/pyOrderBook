@@ -5,7 +5,7 @@ import logging, Queue
 
 class EventDatabase():
 
-    def __init__(self, databaseQueue, terminateFlag, verbose):
+    def __init__(self, databaseQueue = None, terminateFlag = None, verbose = None):
         self.connection = sqlite3.connect("Events.db")
         self.connection.text_factory = str #converting SQL output from Unicode to Bytestring
         self.cursor = self.connection.cursor()
@@ -73,7 +73,7 @@ class EventDatabase():
             NumShares NUMERIC(10,18),
             EventType INT);"""%TableName
         else:
-            print "Table name is not \"Bid\", \"Ask\", or \"Transactions\"." #if table name is not what we want
+            self.debugLog("Table name is not \"Bid\", \"Ask\", or \"Transactions\".") #if table name is not what we want
             return
         #Executing SQL command
         self.cursor.execute(sql_command)
@@ -124,7 +124,7 @@ class EventDatabase():
         self.cursor.execute("SELECT * FROM %s WHERE EventID=?"%TableName,(entryID,))
         data = self.cursor.fetchone()
         if data is None:
-            print('There is no event with eventID %s'%entryID)
+            self.debugLog('There is no event with eventID %s'%entryID)
             return
         else:
             self.cursor.execute("DELETE FROM %s WHERE EventID=?"%TableName,(entryID,))
@@ -142,27 +142,27 @@ class EventDatabase():
         if TableName == "bid":
             self.cursor.execute("""Select * FROM {0}
             ORDER BY Price, EventTime DESC""".format(TableName))
-            print("Fetching Bids: ")
+            self.debugLog("Fetching Bids: ")
             result = self.cursor.fetchmany(Quantity)
         #Lowest Ask first
         elif TableName == "ask":
             self.cursor.execute("""Select * FROM {0}
             ORDER BY Price, EventTime ASC""".format(TableName))
-            print("Fetching Asks: ")
+            self.debugLog("Fetching Asks: ")
             result = self.cursor.fetchmany(Quantity)
         #Latest Transaction first
         elif TableName == "transactions":
             self.cursor.execute("""Select * FROM {0}
             ORDER BY EventTime DESC""".format(TableName))
-            print("Fetching Transaction: ")
+            self.debugLog("Fetching Transaction: ")
             result = self.cursor.fetchmany(Quantity)
         else:
-            print("Table not of type Ask/Bid/Transactions")
+            self.debugLog("Table not of type Ask/Bid/Transactions")
             return
 
         final_result = [list(i) for i in result]
         np_array = np.array(final_result)
-        print np_array
+        self.debugLog(np_array)
             
         self.connection.commit()
         return np_array
@@ -180,7 +180,7 @@ class EventDatabase():
         else:
             pass
 
-        print extracted_arr
+        self.debugLog(extracted_arr)
         return extracted_arr
 
     '''
