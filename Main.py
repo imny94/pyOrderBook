@@ -33,7 +33,9 @@ def updateTrees(askTree, bidTree, inputFile = None, outputFile = None, saveOutpu
 		elif AorB.lower() == "cbid":
 			bidTree.removeOrderFromNode(row[2],row)
 		else:
-			assert False, "Invalid command: %s given!"%row
+			print "Invalid command: %s given!"%row
+			print "Type can only be 'ask','bid','cask' or 'cbid'"
+			return
 	################End of Nested Function ##########################################################
 
 	# Update the newEvent
@@ -135,6 +137,32 @@ def databaseThread(databaseQueue, terminateFlag, verbose):
 	db = Database.EventDatabase(databaseQueue, terminateFlag, verbose)
 	db.run()
 
+def userInputThread(askTree, bidTree, terminateFlag):
+	# Define some constants to do error checking with the user input for new events
+	numAttributes = 5
+
+	# Read in user inputs to add/cancel ask/bid orders
+	try:
+		while 1:
+			if terminateFlag.isSet():
+				terminateSequence(terminateFlag)
+				break
+			print "Enter new event in format 'UserID,Time,Price,NumShares,Type' comma-delimited"
+			newEvent = None
+			rawNewEvent = raw_input(">")
+			if rawNewEvent.lower() in ("stop","quit","exit"):
+				terminateSequence(terminateFlag)
+				break
+			newEvent = [i.strip() for i in rawNewEvent.split(",")]
+			# Data filtering to makes sure that the new input is in the right format
+			if len(newEvent) != numAttributes:
+				print "Wrong Format!"
+				continue
+			updateTrees(askTree, bidTree, newEvent=newEvent)
+
+	except KeyboardInterrupt as identifier:
+		terminateSequence(terminateFlag)
+
 '''
 DESCRIPTION:
 	This function will print out a message detailing the use of this program
@@ -208,44 +236,51 @@ if __name__ == '__main__':
 
 	terminateFlag = threading.Event()
 	# Define the thread that will display UI
-	if showDisplay:
-		displayThread = Thread(target = display, args=(askTree, bidTree, terminateFlag))
+	# if showDisplay:
+	# 	displayThread = Thread(target = display, args=(askTree, bidTree, terminateFlag))
 	# Define the thread that will match up orders
 	matchingThread = Thread(target=matchTransactions, args=(askTree, bidTree, databaseQueue, terminateFlag, verbose, ))
 	# Define the thread that will run database slave
 	databaseThread = Thread(target=databaseThread, args=(databaseQueue, terminateFlag, verbose, ))
+	# Define the thread that will take in user input
+	userInputThread = Thread(target=userInputThread, args=(askTree, bidTree, terminateFlag, ))
 
 	# Start the different threads
 	
-	if showDisplay:
-		displayThread.start()
+	# if showDisplay:
+	# 	displayThread.start()
 
 	matchingThread.start()
 	databaseThread.start()
+	userInputThread.start()
+
+	if showDisplay:
+		# NOTE This is a blocking call!
+		display(askTree, bidTree)
 
 	# orderBookThread.start()
 
-	# Define some constants to do error checking with the user input for new events
-	numAttributes = 5
+	# # Define some constants to do error checking with the user input for new events
+	# numAttributes = 5
 
-	# Read in user inputs to add/cancel ask/bid orders
-	try:
-		while 1:
-			if terminateFlag.isSet():
-				terminateSequence(terminateFlag)
-				break
-			print "Enter new event in format 'UserID,Time,Price,NumShares,Type' comma-delimited"
-			newEvent = None
-			rawNewEvent = raw_input(">")
-			if rawNewEvent.lower() in ("stop","quit","exit"):
-				terminateSequence(terminateFlag)
-				break
-			newEvent = [i.strip() for i in rawNewEvent.split(",")]
-			# Data filtering to makes sure that the new input is in the right format
-			if len(newEvent) != numAttributes:
-				print "Wrong Format!"
-				continue
-			updateTrees(askTree, bidTree, newEvent=newEvent)
+	# # Read in user inputs to add/cancel ask/bid orders
+	# try:
+	# 	while 1:
+	# 		if terminateFlag.isSet():
+	# 			terminateSequence(terminateFlag)
+	# 			break
+	# 		print "Enter new event in format 'UserID,Time,Price,NumShares,Type' comma-delimited"
+	# 		newEvent = None
+	# 		rawNewEvent = raw_input(">")
+	# 		if rawNewEvent.lower() in ("stop","quit","exit"):
+	# 			terminateSequence(terminateFlag)
+	# 			break
+	# 		newEvent = [i.strip() for i in rawNewEvent.split(",")]
+	# 		# Data filtering to makes sure that the new input is in the right format
+	# 		if len(newEvent) != numAttributes:
+	# 			print "Wrong Format!"
+	# 			continue
+	# 		updateTrees(askTree, bidTree, newEvent=newEvent)
 
-	except KeyboardInterrupt as identifier:
-		terminateSequence(terminateFlag)
+	# except KeyboardInterrupt as identifier:
+	# 	terminateSequence(terminateFlag)

@@ -22,7 +22,7 @@ class Tree():
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
-		self.maxNumNodes = 10#100000
+		self.maxNumNodes = 20#100000
 		# Allow for 20% deviation
 		self.hardLimit = self.maxNumNodes * 1.2
 		self.databaseQueue = databaseQueue
@@ -69,16 +69,16 @@ class Tree():
 				self.first10prices.append(price)
 				self.first10prices.sort()
 			# add price if in top 10 range
-			if self.tree_type==0: #bid tree
+			if self.tree_type == 0: #bid tree
 				if price >= self.first10prices[0]:
 					if price not in self.first10prices:
-						self.first10prices.pop[0]
+						self.first10prices.pop(0)
 						self.first10prices.insert(0,price)
 						self.first10prices.sort()
 			else:
 				if price >= self.first10prices[-1]:
 					if price not in self.first10prices:
-						self.first10prices.pop[-1]
+						self.first10prices.pop(-1)
 						self.first10prices.insert(-1,price)
 						self.first10prices.sort()
 		#####################END OF NESTED FUNCTION#############################
@@ -157,6 +157,30 @@ class Tree():
 	def removeNode(self, price):
 		node = self.price_tree.pop(price)
 		self.volume -= int(node.numShares)
+		# -------------------this is used for display---------------
+		# this is for display purpose
+		# if self.tree_type==0: #bid tree
+		# 	if price >= self.first10prices[0]:
+		# 		if price in self.first10prices:
+		# 			self.first10prices.remove(price)
+		# 			self.first10prices.sort()
+		# else:# ask tree
+		# 	if price >= self.first10prices[-1]:
+		# 		if price in self.first10prices:
+		# 			self.first10prices.remove(price)
+		# 			self.first10prices.sort()
+
+		if self.tree_type == 0:
+			# Bid Tree
+			if price in self.first10prices:
+				self.first10prices.remove(price)
+				#TODO: Implement logic to repopulate first10prices after removing a given entry
+		else:
+			# Ask Tree
+			if price in self.first10prices:
+				self.first10prices.remove(price)
+				#TODO: Implement logic to repopulate first10prices after removing a given entry
+
 		return node
 
 	'''
@@ -271,6 +295,8 @@ class Tree():
 	'''
 	def getSatisfiableOrders(self, price, numShares):
 		node = self.lookup(price)
+		if node.getShares() == numShares:
+			self.removeNode(price)
 		return node.getSatisfiableOrders(numShares)
 	
 	'''
@@ -324,7 +350,7 @@ class Tree():
 				count=node.getNumOrders()
 				amount=node.getShares()
 				total+=amount
-				display[idx]=np.array(([price,toal,amount,count]))
+				display[idx]=np.array(([price,total,amount,count]))
 				idx+=1
 		return display
 
@@ -430,6 +456,8 @@ class Node():
 		NOTE The last item on the list returned should not be directly modified if any changes needs to be made, as it is the pointer which points directly to the event in the node
 	'''
 	def getSatisfiableOrders(self, sharesToMatch):
+		if self.getShares() == sharesToMatch:
+			return [i for i in self.orderQueue.values()]
 		returnList = []
 		iter = self.orderQueue.itervalues()
 		# print "Shares to match %d"%sharesToMatch
