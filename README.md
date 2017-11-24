@@ -59,7 +59,7 @@ E.g.
 
 ## Team Members:
 
-This project was done as a part of a course, Bitcoin in the Big Data Era during the fall of 2017 at National Taiwan University, with collaborations between exchange and local students in National Taiwan University. The members of the team are as follows:
+This project was done as a part of a course, Bitcoin in the Big Data Era during the fall of 2017 at National Taiwan University, with collaborations between exchange and local students in National Taiwan University coming from different disciplines and backgrounds. The members of the team are as follows:
 
 Nicholas Yeow [T06902106] - Singapore University of Technology and Design
 
