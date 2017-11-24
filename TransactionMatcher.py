@@ -37,7 +37,7 @@ class TransactionMatcher():
             # logging.debug("minAskPrice: %s , maxBidPrice: %s"%(minAskPrice,maxBidPrice))
 
             if minAskPrice is None or maxBidPrice is None:
-                self.debugLog("Either the ask tree or bid tree is empty! Waiting for tree to be populated")
+                # self.debugLog("Either the ask tree or bid tree is empty! Waiting for tree to be populated")
                 time.sleep(1)
                 continue
             

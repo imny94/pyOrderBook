@@ -22,7 +22,8 @@ class EventDatabase():
             newEntry = self.databaseQueue.get(timeout=3)
             self.InsertData(newEntry[0], newEntry[1])
         except Queue.Empty:
-            self.debugLog("Queue Timeout!")
+            pass
+            # self.debugLog("Queue Timeout!")
 
     def debugLog(self,msg):
         if self.verbose:
