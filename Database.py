@@ -20,7 +20,12 @@ class EventDatabase():
     def __queryQueue(self):
         try:
             newEntry = self.databaseQueue.get(timeout=3)
-            self.InsertData(newEntry[0], newEntry[1])
+            TableName, Data = newEntry
+            if TableName[0] == "c":
+                TableName = TableName[1:]
+                self.RemoveEntry(TableName, Data[0])
+            else:
+                self.InsertData(TableName, Data)
         except Queue.Empty:
             pass
             # self.debugLog("Queue Timeout!")
@@ -120,6 +125,10 @@ class EventDatabase():
             self.cursor.execute(insert_command, (Data[0],Data[1],Data[2],Data[3],Data[4],Data[5],Data[6]))
         self.connection.commit()
 
+    '''
+    DESCRIPTION:
+        Remove event from table
+    ''' 
     def RemoveEntry(self, TableName, entryID):
         TableName = TableName.lower()
         self.cursor.execute("SELECT * FROM %s WHERE EventID=?"%TableName,(entryID,))
@@ -212,45 +221,46 @@ class EventDatabase():
 
 
 
-# #Test cases
-# def main():
-#     database = EventDatabase()
+#Test cases
+def main():
+    import threading
+    database = EventDatabase(Queue.Queue(), threading.Event(), True)
 
-#     ###
-#     #Test ask/bid
-#     ###
+    ###
+    #Test ask/bid
+    ###
 
-#     # database.NewTable("ask")
-#     # database.InsertData("ask",("abc123", "Alice", "1111-11-11 11:11.11.254","89", "1", "2"))
-#     # database.InsertData("ask",("aab123", "Bob", "1111-11-11 11:11.11.574","100", "1", "2"))
-#     # database.InsertData("ask",("aaa123", "Cat", "1111-11-11 11:11.11.124","77", "1", "2"))
-#     # database.InsertData("ask",("abcd123", "Joe", "1111-11-11 11:11.11.125","90", "1", "2"))
-#     # database.InsertData("ask",("a123", "Zoe", "1111-11-11 11:11.11.344","67", "1", "2"))
-#     # mydata = database.RemoveEntry("ask","abc123")
-#     # print mydata
-#     # database.FetchKEntries("ask")
-#     # database.RemoveTable("ask")
+    # database.NewTable("ask")
+    # database.InsertData("ask",("abc123", "Alice", "1111-11-11 11:11.11.254","89", "1", "2"))
+    # database.InsertData("ask",("aab123", "Bob", "1111-11-11 11:11.11.574","100", "1", "2"))
+    # database.InsertData("ask",("aaa123", "Cat", "1111-11-11 11:11.11.124","77", "1", "2"))
+    # database.InsertData("ask",("abcd123", "Joe", "1111-11-11 11:11.11.125","90", "1", "2"))
+    # database.InsertData("ask",("a123", "Zoe", "1111-11-11 11:11.11.344","67", "1", "2"))
+    # mydata = database.RemoveEntry("ask","abc123")
+    # print mydata
+    # database.FetchKEntries("ask")
+    # database.RemoveTable("ask")
 
 
 
-#     ###
-#     #Test transactions
-#     ###
+    ###
+    #Test transactions
+    ###
 
-#     database.NewTable("transactions")
-#     database.InsertData("transactions",("Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "30", "2"))
-#     database.InsertData("transactions",("Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "40", "2"))
-#     database.InsertData("transactions",("Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "50", "2"))
-#     database.InsertData("transactions",("Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "60", "2"))
-#     database.InsertData("transactions",("Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "70", "2"))
-#     # database.FetchKEntries("transactions")
-#     # database.GetPrices("transactions")
-#     # database.Get10Entries("transactions")
-#     mydata = database.RemoveEntry("transactions", "1")
-#     print mydata
-#     database.FetchKEntries("transactions")
-#     database.CloseConnection()
-#     database.RemoveTable("transactions")
+    database.NewTable("transactions")
+    database.InsertData("transactions",("Alice" , "Bob", "1111-11-11 11:11.11.111","97", "1", "30", "2"))
+    database.InsertData("transactions",("Bob" , "Clarice", "1111-11-11 11:11.11.112","107", "1", "40", "2"))
+    database.InsertData("transactions",("Dominic" , "Ellen", "1111-11-11 11:11.11.113","127", "1", "50", "2"))
+    database.InsertData("transactions",("Fabian" , "Germaine", "1111-11-11 11:11.11.114","167", "1", "60", "2"))
+    database.InsertData("transactions",("Ellen" , "Fabian", "1111-11-11 11:11.11.115","77", "1", "70", "2"))
+    # database.FetchKEntries("transactions")
+    # database.GetPrices("transactions")
+    # database.Get10Entries("transactions")
+    mydata = database.RemoveEntry("transactions", "1")
+    print mydata
+    database.FetchKEntries("transactions")
+    database.CloseConnection()
+    database.RemoveTable("transactions")
 
-# if __name__ == '__main__':
-# 	main()
+if __name__ == '__main__':
+	main()
