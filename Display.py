@@ -11,7 +11,7 @@ when calling the function the given name is "transactions".
 so if create a table with different names, please change it!!!
 '''
 
-def display(askTree, bidTree, terminateFlag):
+def display(askTree, bidTree):
 	'''
 	run the display
 	Input:
