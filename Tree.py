@@ -22,11 +22,12 @@ class Tree():
 		self.volume = 0
 		self.min_price = None
 		self.max_price = None
-		self.maxNumNodes = 4#100000
+		self.maxNumNodes = 10#100000
 		# Allow for 20% deviation
 		self.hardLimit = self.maxNumNodes * 1.2
 		self.databaseQueue = databaseQueue
 		self.amtToPrune = 2
+		self.minSizeOfTree = 3
 		self.first10prices=[] # fast to store in list, but need to sort everytime
 		self.tree_type = type_of_tree 
 
@@ -95,7 +96,7 @@ class Tree():
 				# askTree - Keep minimum prices
 				if price > self.getLargestPrice():
 					# Add to database
-					self.insertIntoDatabase(details)
+					self.sendRequestToDatabase(details)
 				else:
 					# Add this event to the node, but we move the bottom x events into the DB if hard limit is reached
 					updateToTree()
@@ -107,13 +108,13 @@ class Tree():
 							nodeToRemove = self.removeNode(self.getLargestPrice())
 							event = nodeToRemove.getNextEvent()
 							while event is not None:
-								self.insertIntoDatabase(event)
+								self.sendRequestToDatabase(event)
 								event = nodeToRemove.getNextEvent()
 			elif self.tree_type == 0:
 				# bidTree - Keep maximum prices
 				if price < self.getSmallestPrice():
 					# Add to database
-					self.insertIntoDatabase(details)
+					self.sendRequestToDatabase(details)
 				else:
 					# Add this event to the node, but we move the bottom x events into the DB if hard limit is reached
 					updateToTree()
@@ -125,7 +126,7 @@ class Tree():
 							nodeToRemove = self.removeNode(self.getSmallestPrice())
 							event = nodeToRemove.getNextEvent()
 							while event is not None:
-								self.insertIntoDatabase(event)
+								self.sendRequestToDatabase(event)
 								event = nodeToRemove.getNextEvent()
 			else:
 				assert False, "Invalid type!"
@@ -164,8 +165,13 @@ class Tree():
 			i.e. Cancelling of orders etc
 	'''
 	def removeOrderFromNode(self, price, event):
-		node = self.price_tree.get(price)
-		node.removeEvent(event)
+		node = self.lookup(price)
+		if node is not None:
+			node.removeEvent(event)
+		else:
+			# Given event is not in tree, might be in database...
+			self.sendRequestToDatabase(event)
+			
 
 
 	'''
@@ -269,18 +275,17 @@ class Tree():
 	
 	'''
 	DESCRIPTION:
-		This function is used to save the event into the Database
+		This function is used to send a request for a given event to the Database
+		The request might be a request to remove entries in the database, or requests to dump entries into the datbase
 
 	ARGUMENTS:
 		event - [EventID, UserID, Time, Price, NumShares, Type]
 	'''
-	def insertIntoDatabase(self, event):
+	def sendRequestToDatabase(self, event):
 		# add event hash to the the event for faster indexing in the database
 		event.insert(0,self.__getEventHash(event))
 		# insert the event into the database
-		self.databaseQueue.put((event[5].lower(), event))
-		
-		return None
+		self.databaseQueue.put((event[-1].lower(), event))
 
 	'''
 	DESCRIPTION:
