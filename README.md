@@ -61,13 +61,13 @@ E.g.
 
 This project was done as a part of a course, Bitcoin in the Big Data Era during the fall of 2017 at National Taiwan University, with collaborations between exchange and local students in National Taiwan University coming from different disciplines and backgrounds. The members of the team are as follows:
 
-Nicholas Yeow [T06902106] - Singapore University of Technology and Design
+[Nicholas Yeow](https://github.com/imny94) [T06902106] - Singapore University of Technology and Design
 
-Tan Kwan Fu [T06501101] - Singapore University of Technology and Design
+[Tan Kwan Fu](https://github.com/wilfred55555) [T06501101] - Singapore University of Technology and Design
 
-Angela Yung [T06902101] - University of California, Santa Barbara
+[Angela Yung](https://github.com/asyung) [T06902101] - University of California, Santa Barbara
 
-Yifan Li [T06901110] - Jilin University (吉林大学）
+[Yifan Li](https://github.com/brucefeynman) [T06901110] - Jilin University (吉林大学）
 
 Deniz Sen [T06303125] - Leiden university
 
