@@ -33,10 +33,12 @@ Additionally, this program takes in the following flags and arguments:
  -i   | --input   | nameOfCSVFile
  -v   | --verbose |           
  -d   | --display |           
+ -m   | --maxSize | desiredSize
  
  Use the input -i flag to pre-load transactions for the program from a csv file.
  Use the verbose -v flag to show messages from background threads.
  Use the -d display flag to show a display for the order book.
+ Use the -m maxSize flag to set a limit on the size of the ask and bid tree, if unspecified, default is 100000
  
  E.g.
  ```
