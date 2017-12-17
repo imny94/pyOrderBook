@@ -58,6 +58,23 @@ where "cask" and "cbid" represents cancel events for ask and bid events
 E.g.
 6542316, 3244657, 500.00, 50, ask
 
+## Importing of the OrderBook as a package
+
+This orderbook can be imported as a package as a part of a larger program. 
+
+To create an instance of this order book in python, import the file OrderBook, and create an instance of the class defined inside OrderBook.
+
+E.g.
+```
+import OrderBook as OrderBook
+import multiprocessing
+
+inputQueue = multiprocessing.Queue()
+instance = OrderBook(inputQueue)
+instance.run()
+```
+
+Refer to file: SampleCode.py for more detailed information/examples/comments on how to use this program as a package.
 
 ## Team Members:
 
