@@ -8,6 +8,6 @@ def install_and_import(package):
     finally:
         globals()[package] = importlib.import_module(package)
 
-dependencies = ["tkinter", "PIL", "sqlite3", "bintrees"]
+dependencies = ["Tkinter", "PIL", "sqlite3", "bintrees"]
 for i in dependencies:
     install_and_import(i)
