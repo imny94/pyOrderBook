@@ -9,8 +9,6 @@ def install_and_import(package):
         	get_pip()
         	print "pip was NOT Installed! It has been attempted to be installed! Check that pip has been installed and try running script again!"
         	return
-        if package == "Tkinter":
-        	package = "python-tk"
         pip.main(['install', package])
     finally:
         globals()[package] = importlib.import_module(package)
