@@ -10,7 +10,7 @@ This program includes a user interface to display the current market price and o
 
 #### Packages Dependencies
 
-###### tkinter, PIL, sqlite3
+###### tkinter, PIL, sqlite3, numpy, bintrees
 
 Please run the following command in the command line to get the necessary dependencies.
 ```
